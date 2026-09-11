@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Ninja Cat: The Whiskered Realm (Ultimate FX Edition)</title>
+    <title>Ninja Cat: The Whiskered Realm (Seamless Mobile Edition)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -139,17 +139,17 @@
 
         .touch-cluster-left {
             position: absolute; 
-            bottom: max(24px, env(safe-area-inset-bottom)); 
-            left: max(24px, env(safe-area-inset-left));
+            bottom: max(20px, env(safe-area-inset-bottom)); 
+            left: max(20px, env(safe-area-inset-left));
             display: flex; gap: 16px; align-items: flex-end; pointer-events: auto;
         }
 
         /* UNIFORM CIRCULAR ROULETTE SKILL CLUSTER (RIGHT SIDE) */
         .touch-cluster-right {
             position: absolute; 
-            bottom: max(16px, env(safe-area-inset-bottom)); 
-            right: max(16px, env(safe-area-inset-right));
-            width: 160px; height: 160px; pointer-events: auto;
+            bottom: max(12px, env(safe-area-inset-bottom)); 
+            right: max(12px, env(safe-area-inset-right));
+            width: 155px; height: 155px; pointer-events: auto;
         }
 
         .touch-btn {
@@ -160,25 +160,25 @@
         }
         .touch-btn:active, .touch-btn.pressed { background: rgba(120, 80, 200, 0.9) !important; border-color: #ffd166 !important; transform: scale(0.92); }
         
-        .dpad-btn { width: 56px; height: 56px; font-weight: bold; font-size: 20px; }
-        .action-btn { width: 58px; height: 46px; border-radius: 12px; font-size: 11px; font-weight: bold; text-shadow: 0px 1px 3px rgba(0,0,0,0.8); }
+        .dpad-btn { width: 54px; height: 54px; font-weight: bold; font-size: 18px; }
+        .action-btn { width: 56px; height: 44px; border-radius: 12px; font-size: 11px; font-weight: bold; text-shadow: 0px 1px 3px rgba(0,0,0,0.8); }
 
         .skill-icon-btn { 
             position: absolute; 
-            width: 46px; height: 46px; 
+            width: 44px; height: 44px; 
             border-radius: 50%; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
         }
-        .skill-icon-btn .icon-symbol { font-size: 20px; line-height: 1; }
-        .skill-icon-btn .key-tag { position: absolute; top: 2px; right: 3px; font-size: 8px; color: rgba(255,255,255,0.85); font-weight: bold; }
-        .skill-icon-btn .cd-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; color: #ffd166; }
+        .skill-icon-btn .icon-symbol { font-size: 19px; line-height: 1; }
+        .skill-icon-btn .key-tag { position: absolute; top: 1px; right: 2px; font-size: 7px; color: rgba(255,255,255,0.85); font-weight: bold; }
+        .skill-icon-btn .cd-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #ffd166; }
 
         /* Symmetrical Circular Roulette Wheel Layout */
-        #btn-z { top: 10px; left: 57px; background: rgba(255, 183, 3, 0.88); border-color: #ffd166; color: #111; }
-        #btn-x { top: 43px; left: 114px; background: rgba(255, 77, 109, 0.82); }
-        #btn-c { top: 96px; left: 93px; background: rgba(58, 134, 255, 0.82); }
-        #btn-v { top: 96px; left: 21px; background: rgba(114, 9, 183, 0.82); }
-        #btn-b { top: 43px; left: 0px; background: rgba(247, 37, 133, 0.88); border-color: #ffd166; }
+        #btn-z { top: 8px; left: 55px; background: rgba(255, 183, 3, 0.88); border-color: #ffd166; color: #111; }
+        #btn-x { top: 40px; left: 110px; background: rgba(255, 77, 109, 0.82); }
+        #btn-c { top: 92px; left: 90px; background: rgba(58, 134, 255, 0.82); }
+        #btn-v { top: 92px; left: 20px; background: rgba(114, 9, 183, 0.82); }
+        #btn-b { top: 40px; left: 0px; background: rgba(247, 37, 133, 0.88); border-color: #ffd166; }
 
         .controls-info { margin-top: 8px; font-size: 12px; color: #9c8cb8; line-height: 1.5; background: rgba(25, 20, 38, 0.6); padding: 8px 16px; border-radius: 8px; border: 1px dashed #7c64a3; max-width: 500px;}
         .hidden { display: none !important; }
@@ -229,9 +229,9 @@
         <div id="pc-skill-bar" class="hidden">
             <div class="pc-skill-slot" id="pc-slot-z"><span class="key-tag">Z</span><span class="icon-symbol" id="pc-icon-z">🐾</span><div class="cd-overlay hidden" id="pc-cd-z"></div></div>
             <div class="pc-skill-slot" id="pc-slot-x"><span class="key-tag">X</span><span class="icon-symbol" id="pc-icon-x">🔨</span><div class="cd-overlay hidden" id="pc-cd-x"></div></div>
-            <div class="pc-skill-slot" id="pc-slot-c"><span class="key-tag">C</span><span class="icon-symbol" id="pc-icon-c">🗡️</span><div class="cd-overlay hidden" id="pc-cd-c"></div></div>
-            <div class="pc-skill-slot" id="pc-slot-v"><span class="key-tag">V</span><span class="icon-symbol" id="pc-icon-v">🔔</span><div class="cd-overlay hidden" id="pc-cd-v"></div></div>
-            <div class="pc-skill-slot" id="pc-slot-b"><span class="key-tag">B</span><span class="icon-symbol" id="pc-icon-b">🌀</span><div class="cd-overlay hidden" id="pc-cd-b"></div></div>
+            <div class="pc-skill-slot" id="pc-slot-c"><span class="key-tag">C</span><span class="icon-symbol" id="pc-icon-c">🧶</span><div class="cd-overlay hidden" id="pc-cd-c"></div></div>
+            <div class="pc-skill-slot" id="pc-slot-v"><span class="key-tag">V</span><span class="icon-symbol" id="pc-icon-v">🔊</span><div class="cd-overlay hidden" id="pc-cd-v"></div></div>
+            <div class="pc-skill-slot" id="pc-slot-b"><span class="key-tag">B</span><span class="icon-symbol" id="pc-icon-b">🌪️</span><div class="cd-overlay hidden" id="pc-cd-b"></div></div>
         </div>
 
         <div id="touch-controls">
@@ -264,7 +264,7 @@
         <p id="best-stage-display" style="color: #ffd166; font-size: 14px; font-weight: bold; margin: 4px 0 12px 0;">🏆 Best Stage Reached: Stage 1</p>
 
         <div style="margin: 6px 0 16px 0; display: flex; gap: 10px; justify-content: center; pointer-events: auto;">
-            <button id="platform-mobile-btn" class="menu-btn" style="background: #4a3b6c; border: 2px solid #ffd166;" onclick="setPlatform('mobile')">📱 Mobile (Circular Roulette UI)</button>
+            <button id="platform-mobile-btn" class="menu-btn" style="background: #4a3b6c; border: 2px solid #ffd166;" onclick="setPlatform('mobile')">📱 Mobile (Touch UI)</button>
             <button id="platform-pc-btn" class="menu-btn" style="background: #342850; border: 2px solid #7c64a3;" onclick="setPlatform('pc')">🖥️ PC (Keyboard UI)</button>
         </div>
 
@@ -272,7 +272,7 @@
         <button class="menu-btn" style="background:#5a467e; padding: 12px 32px; font-size:14px;" onclick="resetSaveData()">RESET SAVE DATA</button>
         
         <div id="menu-controls-info" class="controls-info">
-            📱 <strong>Mobile Mode:</strong> Auto landscape. Distinct skill icons and unique visual/audio effects enabled.
+            📱 <strong>Mobile Mode:</strong> Click Play to start seamlessly in full screen landscape mode with circular roulette skills.
         </div>
     </div>
 
@@ -427,34 +427,25 @@
         } catch(e){}
     }
 
-    // Distinct Sound Effects per Skill
     function sfxJump() { playCustomTone(300, 450, 0.12, 'sine', 0.03); }
     function sfxHit() { playCustomTone(120, 60, 0.15, 'triangle', 0.06); }
     function sfxCoin() { playCustomTone(659.25, 880, 0.15, 'sine', 0.04); }
     function sfxBossHit() { playCustomTone(90, 40, 0.25, 'triangle', 0.08); }
     function sfxNoMp() { playCustomTone(90, 70, 0.1, 'sine', 0.02); }
-    
-    // Skill Specific Audio FX
-    function sfxStrike() { playCustomTone(350, 600, 0.08, 'triangle', 0.05); } // Crisp Slash
-    function sfxSlam() { playCustomTone(150, 30, 0.3, 'sawtooth', 0.12); } // Heavy Boom Bass
-    function sfxShuriken() { playCustomTone(400, 950, 0.18, 'sine', 0.05); } // Whizzing Yarn Ball
+    function sfxStrike() { playCustomTone(350, 600, 0.08, 'triangle', 0.05); }
+    function sfxSlam() { playCustomTone(150, 30, 0.3, 'sawtooth', 0.12); }
+    function sfxShuriken() { playCustomTone(400, 950, 0.18, 'sine', 0.05); }
     function sfxSonicShockwave() {
         if (!audioCtx) return;
-        [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
-            playCustomTone(freq, freq * 1.2, 0.35, 'sine', 0.035);
-        });
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq) => { playCustomTone(freq, freq * 1.2, 0.35, 'sine', 0.035); });
     }
     function sfxHelperSummon() {
         if (!audioCtx) return;
-        [440, 554.37, 659.25, 880].forEach((freq, idx) => {
-            setTimeout(() => playCustomTone(freq, freq * 1.1, 0.15, 'sine', 0.03), idx * 50);
-        });
+        [440, 554.37, 659.25, 880].forEach((freq, idx) => { setTimeout(() => playCustomTone(freq, freq * 1.1, 0.15, 'sine', 0.03), idx * 50); });
     }
     function sfxUltimateTempest() {
         if (!audioCtx) return;
-        for (let i = 0; i < 8; i++) {
-            setTimeout(() => playCustomTone(180 + i * 50, 400 + i * 40, 0.25, 'triangle', 0.05), i * 45);
-        }
+        for (let i = 0; i < 8; i++) { setTimeout(() => playCustomTone(180 + i * 50, 400 + i * 40, 0.25, 'triangle', 0.05), i * 45); }
     }
 
     function getBGMThemeForState() {
@@ -476,14 +467,15 @@
         updateBGMState();
     }
 
-    async function enterFullscreenAndLandscape() {
+    // Seamless Fullscreen & Landscape Activation on Play
+    async function activateFullscreenAndLandscape() {
         try {
             let el = document.documentElement;
             if (el.requestFullscreen) await el.requestFullscreen();
             else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
             else if (el.msRequestFullscreen) await el.msRequestFullscreen();
             if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');
-        } catch (err) { console.log("Fullscreen API fallback active."); }
+        } catch (err) { console.log("Fullscreen/Landscape handled gracefully."); }
     }
 
     function setPlatform(platform) {
@@ -491,7 +483,7 @@
         let mobileBtn = document.getElementById('platform-mobile-btn'); let pcBtn = document.getElementById('platform-pc-btn'); let infoEl = document.getElementById('menu-controls-info');
         if (platform === 'mobile') {
             mobileBtn.style.background = '#4a3b6c'; mobileBtn.style.borderColor = '#ffd166'; pcBtn.style.background = '#342850'; pcBtn.style.borderColor = '#7c64a3';
-            infoEl.innerHTML = '📱 <strong>Mobile Mode:</strong> Auto landscape. Distinct skill effects and circular roulette UI active.';
+            infoEl.innerHTML = '📱 <strong>Mobile Mode:</strong> Click Play to start seamlessly in full screen landscape mode with circular roulette skills.';
         } else {
             pcBtn.style.background = '#4a3b6c'; pcBtn.style.borderColor = '#ffd166'; mobileBtn.style.background = '#342850'; mobileBtn.style.borderColor = '#7c64a3';
             infoEl.innerHTML = '🖥️ <strong>PC Mode:</strong> Bottom-left skill slots [Z][X][C][V][B] enabled. Press [P] or [ESC] to pause.';
@@ -551,7 +543,7 @@
     function addDamagePopup(x, y, text, isCrit, isPlayerDmg = false) { damagePopups.push({ x, y, text, isCrit, isPlayerDmg, color: isPlayerDmg ? '#ff4d6d' : (isCrit ? '#ffd166' : '#ffffff'), timer: 45, maxTimer: 45 }); }
 
     function startGame() {
-        if (gamePlatform === 'mobile') enterFullscreenAndLandscape();
+        if (gamePlatform === 'mobile') activateFullscreenAndLandscape();
         loadGame(); document.getElementById('main-menu').classList.add('hidden'); document.getElementById('ui-overlay').classList.remove('hidden'); document.getElementById('ui-overlay').classList.remove('bonus-mode');
         const touchControlsEl = document.getElementById('touch-controls'); const pcSkillBarEl = document.getElementById('pc-skill-bar');
         if (gamePlatform === 'pc') { touchControlsEl.classList.add('hidden'); pcSkillBarEl.classList.remove('hidden'); } else { touchControlsEl.classList.remove('hidden'); pcSkillBarEl.classList.add('hidden'); }
@@ -603,7 +595,6 @@
     function unlockSkill(type, price) { if (player.coins >= price) { sfxCoin(); player.coins -= price; let newlyUnlockedKey = null; if (type === 'shuriken') { player.unlockedShuriken = true; newlyUnlockedKey = 'shuriken'; } if (type === 'shockwave') { player.unlockedShockwave = true; newlyUnlockedKey = 'shockwave'; } if (type === 'helper') { player.unlockedHelper = true; newlyUnlockedKey = 'helper'; } if (type === 'ult') { player.unlockedUltimate = true; newlyUnlockedKey = 'ult'; } if (type === 'dash') player.unlockedDashVfx = true; if (type === 'fire') player.unlockedFireClaw = true; if (newlyUnlockedKey) { if (!player.slots.includes(newlyUnlockedKey)) { let emptyIdx = player.slots.findIndex(s => s === null); if (emptyIdx !== -1) player.slots[emptyIdx] = newlyUnlockedKey; else player.slots[4] = newlyUnlockedKey; } } saveGame(); renderLoadoutUI(); openShopAfterBonus(); } }
     function returnToMenu() { if (document.fullscreenElement) document.exitFullscreen().catch(e=>console.log(e)); document.getElementById('game-over').classList.add('hidden'); document.getElementById('shop-menu').classList.add('hidden'); document.getElementById('bonus-notice').classList.add('hidden'); document.getElementById('pause-menu').classList.add('hidden'); document.getElementById('main-menu').classList.remove('hidden'); document.getElementById('ui-overlay').classList.add('hidden'); document.getElementById('ui-overlay').classList.remove('bonus-mode'); gameState = 'MENU'; updateBGMState(); }
 
-    // Distinct Skill Action Implementations & FX
     function executeBasicAttack() {
         if (player.isAttacking) return;
         sfxStrike();
@@ -974,14 +965,12 @@
             ctx.fillStyle = '#ff4d6d'; ctx.fillRect(screenX, en.y - 12, en.width, 4); ctx.fillStyle = '#4ade80'; ctx.fillRect(screenX, en.y - 12, en.width * (en.hp / en.maxHp), 4);
         });
 
-        // Detailed Yarn Shuriken & Helper Magic Bullets Rendering
         projectiles.forEach(proj => {
             let screenX = proj.x - worldOffset; ctx.save();
             if (proj.type === 'yarn_shuriken') {
                 ctx.translate(screenX, proj.y); ctx.rotate(proj.rotation);
                 ctx.fillStyle = '#ec4899'; ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 10;
                 ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fill();
-                // Yarn string details
                 ctx.strokeStyle = '#fbcfe8'; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.moveTo(-10, -10); ctx.lineTo(10, 10); ctx.moveTo(-10, 10); ctx.lineTo(10, -10); ctx.stroke();
             } else {
