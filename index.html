@@ -2,44 +2,52 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ninja Cat: The Whiskered Realm</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ninja Cat: The Whiskered Realm (Mobile & PC)</title>
     <style>
-        * { box-sizing: border-box; user-select: none; }
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
         body {
             margin: 0; background: #1a162b; color: #f4f4f9;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; overflow: hidden;
+            height: 100vh; width: 100vw; overflow: hidden;
         }
         #game-container {
-            position: relative; width: 900px; height: 500px;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.7); border-radius: 16px;
-            overflow: hidden; border: 3px solid #6b5299; background: #111;
+            position: relative; width: 100%; max-width: 900px;
+            aspect-ratio: 9 / 5; max-height: 100vh;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.7); border-radius: 12px;
+            overflow: hidden; border: 2px solid #6b5299; background: #111;
+            display: flex; justify-content: center; align-items: center;
         }
-        canvas { display: block; background: #111; }
+        canvas { width: 100%; height: 100%; display: block; background: #111; }
         
         #ui-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; display: flex; flex-direction: column;
-            justify-content: space-between; padding: 12px 18px;
+            justify-content: space-between; padding: 8px 12px; z-index: 5;
         }
         .hud-row { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; }
-        .hud-left { display: flex; flex-direction: column; gap: 6px; }
-        .hud-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+        .hud-left { display: flex; flex-direction: column; gap: 4px; }
+        .hud-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
         
         .hud-panel {
             background: rgba(22, 17, 36, 0.82); border: 1.5px solid rgba(150, 120, 200, 0.4);
-            backdrop-filter: blur(6px); padding: 6px 12px; border-radius: 10px;
-            font-weight: bold; font-size: 13px; color: #f1e6ff;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px;
+            backdrop-filter: blur(6px); padding: 4px 8px; border-radius: 8px;
+            font-weight: bold; font-size: 11px; color: #f1e6ff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 6px;
         }
-        .lives-container { display: flex; align-items: center; gap: 3px; }
+        .lives-container { display: flex; align-items: center; gap: 2px; }
         
         /* Cute Glowing Pink Paw Life Icon Style */
         .pink-paw-icon {
             display: inline-flex; align-items: center; justify-content: center;
-            font-size: 16px; color: #ff65a3;
+            font-size: 14px; color: #ff65a3;
             text-shadow: 0 0 8px #ff1493, 0 0 3px #ffffff;
             filter: drop-shadow(0 2px 4px rgba(255, 20, 147, 0.6));
             animation: pawPulse 2s infinite ease-in-out;
@@ -52,16 +60,16 @@
         /* Empty Paw Icon when a Life is lost */
         .empty-paw-icon {
             display: inline-flex; align-items: center; justify-content: center;
-            font-size: 16px; color: rgba(255, 101, 163, 0.22);
+            font-size: 14px; color: rgba(255, 101, 163, 0.22);
             filter: grayscale(100%) opacity(30%);
             text-shadow: 0 0 2px rgba(255, 255, 255, 0.2);
         }
 
-        .bar-group { display: flex; flex-direction: column; gap: 3px; }
-        .bar-label { display: flex; justify-content: space-between; font-size: 10px; color: #d0c2ee; }
+        .bar-group { display: flex; flex-direction: column; gap: 2px; }
+        .bar-label { display: flex; justify-content: space-between; font-size: 9px; color: #d0c2ee; }
         .bar-container {
-            width: 140px; height: 10px; background: #251d38;
-            border-radius: 5px; overflow: hidden; border: 1px solid #5a467e; position: relative;
+            width: 100px; height: 8px; background: #251d38;
+            border-radius: 4px; overflow: hidden; border: 1px solid #5a467e; position: relative;
         }
         .bar-fill { height: 100%; position: absolute; top:0; left:0; }
         #hp-fill { background: linear-gradient(90deg, #ff4d6d, #ff758c); z-index: 2; transition: width 0.15s ease-out; }
@@ -73,65 +81,71 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(17, 14, 26, 0.94); display: flex; flex-direction: column;
             align-items: center; justify-content: flex-start; z-index: 10;
-            text-align: center; padding: 15px; overflow-y: auto;
+            text-align: center; padding: 12px; overflow-y: auto;
         }
-        h1.game-title { font-size: 44px; color: #ffd166; text-shadow: 0 4px 10px rgba(255, 209, 102, 0.4); margin: 10px 0 2px 0; }
-        p.game-subtitle { font-size: 15px; color: #bfaed6; margin-bottom: 20px; }
+        h1.game-title { font-size: 32px; color: #ffd166; text-shadow: 0 4px 10px rgba(255, 209, 102, 0.4); margin: 6px 0 2px 0; }
+        p.game-subtitle { font-size: 13px; color: #bfaed6; margin-bottom: 12px; }
         .menu-btn {
-            background: #7c64a3; color: white; border: none; padding: 8px 16px; margin: 4px;
-            border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer;
+            background: #7c64a3; color: white; border: none; padding: 8px 16px; margin: 3px;
+            border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer;
             box-shadow: 0 3px 0 #4a3b6c; transition: all 0.1s ease; pointer-events: auto;
         }
-        .menu-btn:hover { background: #937abf; transform: translateY(-2px); box-shadow: 0 5px 0 #4a3b6c; }
-        .menu-btn:disabled { background: #3d3356; color: #887fa3; cursor: not-allowed; box-shadow: none; transform: none; }
+        .menu-btn:hover, .menu-btn:active { background: #937abf; transform: translateY(-1px); }
         
         .slot-box {
-            background: #251d38; border: 2px solid #6b5299; border-radius: 8px;
-            padding: 5px 10px; color: #ffd166; font-size: 11px; font-weight: bold;
-            display: flex; flex-direction: column; align-items: center; min-width: 85px;
-            cursor: pointer; transition: all 0.15s; pointer-events: auto;
+            background: #251d38; border: 1.5px solid #6b5299; border-radius: 6px;
+            padding: 4px 6px; color: #ffd166; font-size: 10px; font-weight: bold;
+            display: flex; flex-direction: column; align-items: center; min-width: 65px;
+            cursor: pointer; pointer-events: auto;
         }
         .slot-box.active { border-color: #4ade80; background: #1b3a2b; }
-        .slot-box.selected { border-color: #ffd166; box-shadow: 0 0 12px #ffd166; transform: scale(1.05); }
+        .slot-box.selected { border-color: #ffd166; box-shadow: 0 0 8px #ffd166; transform: scale(1.03); }
 
         .skill-select-btn {
-            background: #342850; border: 1.5px solid #7c64a3; color: #e2d9f3;
-            border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: bold;
-            cursor: pointer; pointer-events: auto; transition: all 0.1s;
+            background: #342850; border: 1px solid #7c64a3; color: #e2d9f3;
+            border-radius: 6px; padding: 3px 6px; font-size: 10px; font-weight: bold;
+            cursor: pointer; pointer-events: auto;
         }
-        .skill-select-btn:hover { background: #503d7a; color: #fff; }
         .skill-select-btn.equipped { background: #2a9d8f; border-color: #4ade80; color: #fff; }
 
         .shop-grid {
-            display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
-            max-width: 820px; margin-bottom: 10px;
+            display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+            max-width: 820px; margin-bottom: 8px;
         }
         .shop-card {
             background: rgba(32, 24, 50, 0.9); border: 1.5px solid #6b5299;
-            border-radius: 10px; padding: 8px 10px; display: flex; align-items: center;
-            gap: 10px; text-align: left; width: 260px; cursor: pointer;
-            transition: all 0.15s; pointer-events: auto; position: relative;
+            border-radius: 8px; padding: 6px 8px; display: flex; align-items: center;
+            gap: 8px; text-align: left; width: 220px; cursor: pointer; pointer-events: auto;
         }
-        .shop-card:hover:not(.disabled) {
-            background: #4a3870; border-color: #ffd166; transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 209, 102, 0.2);
+        .shop-card.disabled { opacity: 0.5; cursor: not-allowed; border-color: #443760; }
+        .shop-card-icon { font-size: 22px; min-width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border-radius: 6px; }
+        .shop-card-title { font-weight: bold; font-size: 11px; color: #ffd166; }
+        .shop-card-desc { font-size: 9px; color: #c4b5fd; line-height: 1.2; }
+        .shop-card-cost { font-size: 10px; color: #4ade80; font-weight: bold; }
+
+        /* ON-SCREEN MOBILE TOUCH CONTROLS */
+        #touch-controls {
+            position: absolute; bottom: 8px; left: 0; width: 100%;
+            display: flex; justify-content: space-between; padding: 0 12px;
+            pointer-events: none; z-index: 8;
         }
-        .shop-card.disabled {
-            opacity: 0.5; cursor: not-allowed; border-color: #443760;
+        .touch-group { display: flex; gap: 6px; align-items: flex-end; pointer-events: auto; }
+        .touch-btn {
+            background: rgba(40, 30, 65, 0.75); border: 1.5px solid rgba(180, 150, 240, 0.5);
+            color: #fff; border-radius: 50%; width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 14px; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px); transition: background 0.05s, transform 0.05s;
         }
-        .shop-card-icon {
-            font-size: 28px; min-width: 38px; height: 38px; display: flex;
-            align-items: center; justify-content: center; background: rgba(0,0,0,0.3);
-            border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+        .touch-btn:active, .touch-btn.pressed {
+            background: rgba(120, 80, 200, 0.9); border-color: #ffd166;
+            transform: scale(0.92);
         }
-        .shop-card-info { display: flex; flex-direction: column; flex-grow: 1; }
-        .shop-card-title { font-weight: bold; font-size: 12px; color: #ffd166; }
-        .shop-card-desc { font-size: 10px; color: #c4b5fd; line-height: 1.25; margin-top: 2px; }
-        .shop-card-cost { font-size: 11px; color: #4ade80; font-weight: bold; margin-top: 3px; }
+        .touch-btn-wide { border-radius: 12px; width: 52px; height: 40px; font-size: 11px; }
 
         .controls-info {
-            margin-top: 15px; font-size: 13px; color: #9c8cb8; line-height: 1.5;
-            background: rgba(25, 20, 38, 0.6); padding: 12px 20px; border-radius: 8px; border: 1px dashed #7c64a3;
+            margin-top: 10px; font-size: 11px; color: #9c8cb8; line-height: 1.4;
+            background: rgba(25, 20, 38, 0.6); padding: 8px 14px; border-radius: 8px; border: 1px dashed #7c64a3;
         }
         .hidden { display: none !important; }
     </style>
@@ -149,7 +163,7 @@
                     <span>LIVES:</span>
                     <span id="hud-lives-icons" class="lives-container"></span>
                 </div>
-                <div class="hud-panel" style="gap: 12px;">
+                <div class="hud-panel" style="gap: 8px;">
                     <div class="bar-group">
                         <div class="bar-label"><span>HP</span><span id="hp-text">100/100</span></div>
                         <div class="bar-container">
@@ -164,21 +178,35 @@
                 </div>
             </div>
             <div class="hud-right">
-                <div class="hud-panel" style="gap: 12px;">
+                <div class="hud-panel" style="gap: 8px;">
                     <span id="hud-level">LV.1</span>
                     <div class="bar-group">
                         <div class="bar-label"><span>EXP</span></div>
-                        <div class="bar-container" style="width: 80px;"><div id="exp-fill" class="bar-fill"></div></div>
+                        <div class="bar-container" style="width: 60px;"><div id="exp-fill" class="bar-fill"></div></div>
                     </div>
                     <span id="hud-coins" style="color: #ffd166;">🪙 0</span>
-                    <button id="bgm-toggle-btn" class="menu-btn" style="padding: 2px 8px; font-size: 11px; margin: 0;" onclick="toggleBGM()">🔊 BGM ON</button>
+                    <button id="bgm-toggle-btn" class="menu-btn" style="padding: 2px 6px; font-size: 10px; margin: 0;" onclick="toggleBGM()">🔊 BGM ON</button>
                 </div>
-                <div class="hud-panel" id="hud-stage" style="font-size: 12px; color: #bfaed6;">Stage 1: Cozy Cat Village</div>
+                <div class="hud-panel" id="hud-stage" style="font-size: 10px; color: #bfaed6;">Stage 1: Cozy Cat Village</div>
             </div>
         </div>
-        <div class="hud-row">
-            <div class="hud-panel" id="hud-skills" style="font-size: 11px; margin-top: auto;">
-                [Z] Strike | [X] Slam | [C] -- | [V] -- | [B] --
+
+        <!-- ON-SCREEN TOUCH CONTROLS FOR MOBILE PLAY -->
+        <div id="touch-controls">
+            <!-- Left Controls: D-Pad Movement & Actions -->
+            <div class="touch-group">
+                <div class="touch-btn" id="btn-left">◀</div>
+                <div class="touch-btn" id="btn-right">▶</div>
+                <div class="touch-btn touch-btn-wide" id="btn-jump" style="background: rgba(42, 157, 143, 0.75);">JUMP</div>
+                <div class="touch-btn touch-btn-wide" id="btn-dash" style="background: rgba(231, 111, 81, 0.75);">DASH</div>
+            </div>
+            <!-- Right Controls: Action & Skill Slots -->
+            <div class="touch-group" style="gap: 4px;">
+                <div class="touch-btn" id="btn-z" style="background: rgba(255, 183, 3, 0.8); color: #111;">Z</div>
+                <div class="touch-btn" id="btn-x" style="background: rgba(255, 77, 109, 0.8);">X</div>
+                <div class="touch-btn" id="btn-c">C</div>
+                <div class="touch-btn" id="btn-v">V</div>
+                <div class="touch-btn" id="btn-b" style="border-color: #ffd166;">B</div>
             </div>
         </div>
     </div>
@@ -187,49 +215,48 @@
     <div id="main-menu" class="screen-overlay" style="justify-content: center;">
         <h1 class="game-title">NINJA CAT</h1>
         <p class="game-subtitle">The 9-Lives Whiskered Realm Adventure</p>
-        <button class="menu-btn" style="padding: 12px 28px; font-size:16px;" onclick="startGame()">PLAY GAME</button>
-        <button class="menu-btn" style="background:#5a467e; padding: 12px 28px; font-size:16px;" onclick="resetSaveData()">RESET SAVE DATA</button>
+        <button class="menu-btn" style="padding: 10px 24px; font-size:14px;" onclick="startGame()">PLAY GAME</button>
+        <button class="menu-btn" style="background:#5a467e; padding: 10px 24px; font-size:14px;" onclick="resetSaveData()">RESET SAVE DATA</button>
         <div class="controls-info">
             <strong>CONTROLS:</strong><br>
-            [Left / Right] Move &nbsp;|&nbsp; [Up / Spacebar] Jump &nbsp;|&nbsp; [Double-Tap] Dash<br>
-            [Z] Paw Strike &nbsp;|&nbsp; [X] Paw Slam &nbsp;|&nbsp; [C], [V], [B] Skill Slots<br>
-            <em>* Customise your skill layout in the Shop screen for comfortable controls!</em>
+            📱 <strong>Mobile:</strong> Use Touch Buttons on Screen<br>
+            💻 <strong>PC:</strong> [Arrows] Move & Jump &nbsp;|&nbsp; [Z][X][C][V][B] Skills
         </div>
     </div>
 
     <!-- Bonus Stage Notice -->
     <div id="bonus-notice" class="screen-overlay hidden" style="justify-content: center;">
-        <h2 style="color: #ffd166; font-size: 36px; margin-bottom: 5px;">AQUARIUM BONUS STAGE!</h2>
-        <p style="color: #bfaed6; font-size: 18px;">Catch as many falling salmon inside the fish tank in 30 seconds!</p>
-        <button class="menu-btn" style="padding: 12px 28px; font-size:16px;" onclick="startBonusStageLoop()">START CATCHING!</button>
+        <h2 style="color: #ffd166; font-size: 28px; margin-bottom: 4px;">AQUARIUM BONUS STAGE!</h2>
+        <p style="color: #bfaed6; font-size: 14px;">Catch as many falling salmon inside the fish tank in 30 seconds!</p>
+        <button class="menu-btn" style="padding: 10px 24px; font-size:14px;" onclick="startBonusStageLoop()">START CATCHING!</button>
     </div>
 
     <!-- Shop & Skill Loadout Screen -->
     <div id="shop-menu" class="screen-overlay hidden">
-        <h2 id="bonus-result-title" style="color: #4ade80; margin-top:5px; margin-bottom:2px; font-size:24px;">STAGE CLEARED!</h2>
-        <p id="bonus-result-score" style="font-size: 14px; color: #ffd166; margin: 2px;">Bonus Catch: 0 Salmon (+0 Coins)</p>
-        <p id="shop-coins" style="color: #bfaed6; margin: 2px 0 6px 0; font-size: 15px; font-weight: bold;">Total Whisker Coins: 🪙 0</p>
+        <h2 id="bonus-result-title" style="color: #4ade80; margin-top:2px; margin-bottom:2px; font-size:20px;">STAGE CLEARED!</h2>
+        <p id="bonus-result-score" style="font-size: 12px; color: #ffd166; margin: 2px;">Bonus Catch: 0 Salmon (+0 Coins)</p>
+        <p id="shop-coins" style="color: #bfaed6; margin: 2px 0 4px 0; font-size: 13px; font-weight: bold;">Total Whisker Coins: 🪙 0</p>
 
         <!-- Skill Slot Swap Management UI -->
-        <div style="background: rgba(0,0,0,0.5); padding: 8px; border-radius: 10px; width: 830px; margin-bottom: 8px; border: 1px solid #7c64a3;">
-            <p style="color: #ffd166; margin: 0 0 5px 0; font-weight: bold; font-size:12px;">
-                ⚔️ SKILL SLOTS MANAGEMENT (Click a slot, then click a skill to equip or swap shortcut keys):
+        <div style="background: rgba(0,0,0,0.5); padding: 6px; border-radius: 8px; width: 100%; max-width: 820px; margin-bottom: 6px; border: 1px solid #7c64a3;">
+            <p style="color: #ffd166; margin: 0 0 4px 0; font-weight: bold; font-size:11px;">
+                ⚔️ SKILL SLOTS MANAGEMENT (Tap a slot, then tap a skill to equip/swap):
             </p>
-            <div id="loadout-container" style="display: flex; gap: 8px; justify-content: center; margin-bottom: 6px;"></div>
-            <div id="unlocked-picker-container" style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; background: rgba(20,15,35,0.6); padding: 5px; border-radius: 6px;"></div>
+            <div id="loadout-container" style="display: flex; gap: 6px; justify-content: center; margin-bottom: 4px;"></div>
+            <div id="unlocked-picker-container" style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; background: rgba(20,15,35,0.6); padding: 4px; border-radius: 6px;"></div>
         </div>
 
         <!-- Visual Shop Cards Grid -->
         <div class="shop-grid" id="shop-grid-container"></div>
 
-        <button class="menu-btn" style="background:#4ade80; color:#111; padding: 8px 28px; font-size:14px; margin-bottom: 10px;" onclick="closeShopAndProceed()">PROCEED TO NEXT STAGE ➔</button>
+        <button class="menu-btn" style="background:#4ade80; color:#111; padding: 6px 20px; font-size:13px; margin-bottom: 8px;" onclick="closeShopAndProceed()">PROCEED TO NEXT STAGE ➔</button>
     </div>
 
     <!-- Game Over Screen -->
     <div id="game-over" class="screen-overlay hidden" style="justify-content: center;">
-        <h2 style="color: #ff4d6d; font-size: 40px; margin: 0;">ALL LIVES LOST!</h2>
-        <p style="color: #bfaed6; margin: 10px 0 20px 0;">Your adventure ends here...</p>
-        <button class="menu-btn" style="padding: 12px 28px; font-size:16px;" onclick="returnToMenu()">MAIN MENU</button>
+        <h2 style="color: #ff4d6d; font-size: 32px; margin: 0;">ALL LIVES LOST!</h2>
+        <p style="color: #bfaed6; margin: 8px 0 16px 0;">Your adventure ends here...</p>
+        <button class="menu-btn" style="padding: 10px 24px; font-size:14px;" onclick="returnToMenu()">MAIN MENU</button>
     </div>
 </div>
 
@@ -470,6 +497,7 @@
 
     const slotKeyMap = { 'KeyZ': 0, 'KeyX': 1, 'KeyC': 2, 'KeyV': 3, 'KeyB': 4 };
 
+    // --- KEYBOARD & MOBILE TOUCH CONTROLS BINDING ---
     window.addEventListener('keydown', (e) => {
         initAudio();
         if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
@@ -497,6 +525,38 @@
     window.addEventListener('keyup', (e) => {
         if (keys.hasOwnProperty(e.code)) keys[e.code] = false;
     });
+
+    function setupTouchButton(id, onStart, onEnd) {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        const startFn = (e) => {
+            e.preventDefault(); initAudio();
+            el.classList.add('pressed');
+            if (onStart) onStart();
+        };
+        const endFn = (e) => {
+            e.preventDefault();
+            el.classList.remove('pressed');
+            if (onEnd) onEnd();
+        };
+
+        el.addEventListener('touchstart', startFn, { passive: false });
+        el.addEventListener('touchend', endFn, { passive: false });
+        el.addEventListener('mousedown', startFn);
+        el.addEventListener('mouseup', endFn);
+    }
+
+    setupTouchButton('btn-left', () => keys.ArrowLeft = true, () => keys.ArrowLeft = false);
+    setupTouchButton('btn-right', () => keys.ArrowRight = true, () => keys.ArrowRight = false);
+    setupTouchButton('btn-jump', () => keys.Space = true, () => keys.Space = false);
+    setupTouchButton('btn-dash', () => triggerDash(player.facingRight ? 1 : -1));
+
+    setupTouchButton('btn-z', () => executeSkillByName(player.slots[0]));
+    setupTouchButton('btn-x', () => executeSkillByName(player.slots[1]));
+    setupTouchButton('btn-c', () => executeSkillByName(player.slots[2]));
+    setupTouchButton('btn-v', () => executeSkillByName(player.slots[3]));
+    setupTouchButton('btn-b', () => executeSkillByName(player.slots[4]));
 
     function triggerDash(dir) {
         if (player.dashCooldown <= 0) {
@@ -559,7 +619,7 @@
         player.slots.forEach((skillKey, idx) => {
             let box = document.createElement('div');
             box.className = 'slot-box ' + (skillKey ? 'active ' : '') + (idx === selectedSlotForSwap ? 'selected' : '');
-            let keyText = `<span style="color:#a2d2ff; font-size:12px;">${SLOT_KEYS[idx]}</span>`;
+            let keyText = `<span style="color:#a2d2ff; font-size:10px;">${SLOT_KEYS[idx]}</span>`;
             let skillText = skillKey ? ALL_SKILLS[skillKey].short : '<span style="color:#777;">(Empty)</span>';
             box.innerHTML = `${keyText}${skillText}`;
             box.onclick = () => selectSlotForSwap(idx);
@@ -607,75 +667,23 @@
         grid.innerHTML = '';
 
         const shopItems = [
-            {
-                id: 'life', icon: '🐾', title: 'Extra Paw Life (+1 Life)',
-                desc: 'Restores 1 pink paw life to your reserve.',
-                cost: costs.life,
-                action: () => buyLife()
-            },
-            {
-                id: 'atk', icon: '⚔️', title: 'Attack Upgrade (+5 ATK)',
-                desc: 'Increases melee and skill damage.',
-                cost: costs.atk,
-                action: () => upgradeStat('atk')
-            },
-            {
-                id: 'hp', icon: '💖', title: 'Max HP Upgrade (+25 HP)',
-                desc: 'Expands max health bar & restores full HP.',
-                cost: costs.hp,
-                action: () => upgradeStat('hp')
-            },
-            {
-                id: 'spd', icon: '⚡', title: 'Speed Upgrade (+0.5 SPD)',
-                desc: 'Increases movement and dodge speed.',
-                cost: costs.spd,
-                action: () => upgradeStat('spd')
-            },
-            {
-                id: 'shuriken', icon: '🗡️', title: 'Yarn Shuriken',
-                desc: 'Throws a piercing spinning yarn shuriken.',
-                cost: 80, unlocked: player.unlockedShuriken,
-                action: () => unlockSkill('shuriken', 80)
-            },
-            {
-                id: 'shockwave', icon: '🔔', title: 'Sonic Shockwave',
-                desc: 'Emits a heavy sonic wave clearing nearby foes.',
-                cost: 150, unlocked: player.unlockedShockwave,
-                action: () => unlockSkill('shockwave', 150)
-            },
-            {
-                id: 'helper', icon: '🐾', title: 'Kitten Helper',
-                desc: 'Summons a cute kitten companion for 15s.',
-                cost: 200, unlocked: player.unlockedHelper,
-                action: () => unlockSkill('helper', 200)
-            },
-            {
-                id: 'ult', icon: '🌀', title: 'Paw Tempest',
-                desc: 'Unleashes a screen-clearing paw storm.',
-                cost: 300, unlocked: player.unlockedUltimate,
-                action: () => unlockSkill('ult', 300)
-            },
-            {
-                id: 'dash', icon: '⚡', title: 'Lightning Trail',
-                desc: 'Leaves a lightning particle trail during dash.',
-                cost: 120, unlocked: player.unlockedDashVfx,
-                action: () => unlockSkill('dash', 120)
-            },
-            {
-                id: 'fire', icon: '🔥', title: 'Fiery Slash',
-                desc: 'Buffs basic attacks with 25% bonus fire damage.',
-                cost: 180, unlocked: player.unlockedFireClaw,
-                action: () => unlockSkill('fire', 180)
-            }
+            { id: 'life', icon: '🐾', title: 'Extra Paw Life (+1 Life)', desc: 'Restores 1 pink paw life to reserve.', cost: costs.life, action: () => buyLife() },
+            { id: 'atk', icon: '⚔️', title: 'Attack Upgrade (+5 ATK)', desc: 'Increases melee & skill damage.', cost: costs.atk, action: () => upgradeStat('atk') },
+            { id: 'hp', icon: '💖', title: 'Max HP Upgrade (+25 HP)', desc: 'Expands health bar & refills HP.', cost: costs.hp, action: () => upgradeStat('hp') },
+            { id: 'spd', icon: '⚡', title: 'Speed Upgrade (+0.5 SPD)', desc: 'Increases move & dodge speed.', cost: costs.spd, action: () => upgradeStat('spd') },
+            { id: 'shuriken', icon: '🗡️', title: 'Yarn Shuriken', desc: 'Throws spinning yarn shuriken.', cost: 80, unlocked: player.unlockedShuriken, action: () => unlockSkill('shuriken', 80) },
+            { id: 'shockwave', icon: '🔔', title: 'Sonic Shockwave', desc: 'Emits heavy sonic wave.', cost: 150, unlocked: player.unlockedShockwave, action: () => unlockSkill('shockwave', 150) },
+            { id: 'helper', icon: '🐾', title: 'Kitten Helper', desc: 'Summons kitten helper for 15s.', cost: 200, unlocked: player.unlockedHelper, action: () => unlockSkill('helper', 200) },
+            { id: 'ult', icon: '🌀', title: 'Paw Tempest', desc: 'Unleashes screen paw storm.', cost: 300, unlocked: player.unlockedUltimate, action: () => unlockSkill('ult', 300) },
+            { id: 'dash', icon: '⚡', title: 'Lightning Trail', desc: 'Leaves lightning trail on dash.', cost: 120, unlocked: player.unlockedDashVfx, action: () => unlockSkill('dash', 120) },
+            { id: 'fire', icon: '🔥', title: 'Fiery Slash', desc: 'Buffs attacks with 25% fire dmg.', cost: 180, unlocked: player.unlockedFireClaw, action: () => unlockSkill('fire', 180) }
         ];
 
         shopItems.forEach(item => {
             let card = document.createElement('div');
             let isUnlocked = item.unlocked;
             let canAfford = player.coins >= item.cost;
-            
             card.className = 'shop-card ' + (isUnlocked || !canAfford ? 'disabled' : '');
-            
             let costLabel = isUnlocked ? '✓ UNLOCKED' : `Cost: 🪙 ${item.cost}`;
             card.innerHTML = `
                 <div class="shop-card-icon">${item.icon}</div>
@@ -685,21 +693,15 @@
                     <div class="shop-card-cost" style="${isUnlocked ? 'color:#a2d2ff;' : ''}">${costLabel}</div>
                 </div>
             `;
-            if (!isUnlocked && canAfford) {
-                card.onclick = item.action;
-            }
+            if (!isUnlocked && canAfford) card.onclick = item.action;
             grid.appendChild(card);
         });
     }
 
     function buyLife() {
         if (player.coins >= costs.life) {
-            sfxCoin();
-            player.coins -= costs.life;
-            player.lives++;
-            costs.life = Math.floor(costs.life * 1.5);
-            saveGame();
-            openShopAfterBonus();
+            sfxCoin(); player.coins -= costs.life; player.lives++;
+            costs.life = Math.floor(costs.life * 1.5); saveGame(); openShopAfterBonus();
         }
     }
 
@@ -709,8 +711,7 @@
         document.getElementById('shop-menu').classList.remove('hidden');
         document.getElementById('bonus-result-score').innerText = `Bonus Catch: ${bonusCaught} Salmon (+${bonusCaught * 10} Coins)`;
         document.getElementById('shop-coins').innerText = `Total Whisker Coins: 🪙 ${player.coins}`;
-        updateBGMState();
-        renderLoadoutUI();
+        updateBGMState(); renderLoadoutUI();
     }
 
     function closeShopAndProceed() {
@@ -720,32 +721,25 @@
         currentStage++;
         if (currentStage > maxStages) {
             alert('CONGRATULATIONS! YOU HAVE CONQUERED THE WHISKERED REALM!');
-            returnToMenu();
-            return;
+            returnToMenu(); return;
         }
-        initStage();
-        gameState = 'PLAYING';
-        updateBGMState();
+        initStage(); gameState = 'PLAYING'; updateBGMState();
     }
 
     function upgradeStat(stat) {
         if (player.coins >= costs[stat]) {
-            sfxCoin();
-            player.coins -= costs[stat];
+            sfxCoin(); player.coins -= costs[stat];
             if (stat === 'atk') { player.atk += 5; costs.atk = Math.floor(costs.atk * 1.4); }
             if (stat === 'hp') { player.maxHp += 25; player.hp = player.maxHp; costs.hp = Math.floor(costs.hp * 1.4); }
             if (stat === 'spd') { player.speed += 0.5; costs.spd = Math.floor(costs.spd * 1.5); }
-            saveGame();
-            openShopAfterBonus();
+            saveGame(); openShopAfterBonus();
         }
     }
 
     function unlockSkill(type, price) {
         if (player.coins >= price) {
-            sfxCoin();
-            player.coins -= price;
+            sfxCoin(); player.coins -= price;
             let newlyUnlockedKey = null;
-
             if (type === 'shuriken') { player.unlockedShuriken = true; newlyUnlockedKey = 'shuriken'; }
             if (type === 'shockwave') { player.unlockedShockwave = true; newlyUnlockedKey = 'shockwave'; }
             if (type === 'helper') { player.unlockedHelper = true; newlyUnlockedKey = 'helper'; }
@@ -757,9 +751,7 @@
                 let emptyIdx = player.slots.findIndex(s => s === null);
                 if (emptyIdx !== -1) player.slots[emptyIdx] = newlyUnlockedKey;
             }
-
-            saveGame();
-            openShopAfterBonus();
+            saveGame(); openShopAfterBonus();
         }
     }
 
@@ -769,15 +761,13 @@
         document.getElementById('bonus-notice').classList.add('hidden');
         document.getElementById('main-menu').classList.remove('hidden');
         document.getElementById('ui-overlay').classList.add('hidden');
-        gameState = 'MENU';
-        updateBGMState();
+        gameState = 'MENU'; updateBGMState();
     }
 
     // --- ATTACKS & SKILLS ---
     function executeBasicAttack() {
         if (player.isAttacking) return;
-        sfxAttack();
-        player.isAttacking = true; player.attackType = 'basic';
+        sfxAttack(); player.isAttacking = true; player.attackType = 'basic';
         player.attackTimer = 10; player.attackStep = (player.attackStep % 3) + 1;
         let baseDmg = player.atk * (player.attackStep === 3 ? 1.4 : 1.0);
         if (player.unlockedFireClaw) baseDmg *= 1.25;
@@ -787,8 +777,7 @@
     function executeHeavyAttack() {
         if (player.isAttacking) return;
         sfxAttack(); triggerShake(8);
-        player.isAttacking = true; player.attackType = 'heavy';
-        player.attackTimer = 18;
+        player.isAttacking = true; player.attackType = 'heavy'; player.attackTimer = 18;
         let slamX = worldOffset + player.x + (player.facingRight ? 50 : -30);
         visualEffects.push({ type: 'ground_slam', x: slamX, y: 380, timer: 14, maxTimer: 14 });
         checkHitTargets(85, player.atk * 2.2);
@@ -808,7 +797,6 @@
         if (player.skill2Cd > 0 || player.mp < 20) return;
         sfxAttack(); triggerShake(12); player.mp -= 20; player.skill2Cd = 120;
         let pWorldX = worldOffset + player.x;
-
         visualEffects.push({ type: 'bell_shockwave', x: pWorldX, y: player.y + 35, radius: 15, maxRadius: 130, alpha: 0.9 });
         enemies.forEach(en => { if (Math.abs(en.x - pWorldX) < 140) applyDamageToEnemy(en, player.atk * 3.0); });
         if (boss && bossFightActive && Math.abs(boss.x - pWorldX) < 150) applyDamageToBoss(player.atk * 3.0);
@@ -816,20 +804,14 @@
 
     function executeSummonHelper() {
         if (player.helperCd > 0 || player.mp < 20) return;
-        player.mp -= 20; player.helperCd = 900; player.helperTimer = 900;
-        sfxCoin();
+        player.mp -= 20; player.helperCd = 900; player.helperTimer = 900; sfxCoin();
     }
 
     function executeUltimate() {
         if (player.ultCd > 0 || player.mp < 30) return;
-        player.mp -= 30; player.ultCd = 360;
-        triggerShake(25); sfxBossHit();
-
+        player.mp -= 30; player.ultCd = 360; triggerShake(25); sfxBossHit();
         visualEffects.push({ type: 'paw_tempest', x: worldOffset + 450, y: 250, timer: 45, maxTimer: 45 });
-
-        enemies.forEach(en => {
-            if (en.x > worldOffset && en.x < worldOffset + 900) applyDamageToEnemy(en, player.atk * 5.0);
-        });
+        enemies.forEach(en => { if (en.x > worldOffset && en.x < worldOffset + 900) applyDamageToEnemy(en, player.atk * 5.0); });
         if (boss && bossFightActive) applyDamageToBoss(player.atk * 5.0);
     }
 
@@ -908,12 +890,9 @@
 
             if (frameCount % 60 === 0) {
                 projectiles.push({
-                    x: worldOffset + helperKitten.x,
-                    y: helperKitten.y,
-                    vx: player.facingRight ? 7 : -7,
-                    rotation: 0,
-                    type: 'helper_bullet',
-                    dmg: player.atk * 1.2
+                    x: worldOffset + helperKitten.x, y: helperKitten.y,
+                    vx: player.facingRight ? 7 : -7, rotation: 0,
+                    type: 'helper_bullet', dmg: player.atk * 1.2
                 });
             }
         }
@@ -924,9 +903,7 @@
             if (player.unlockedDashVfx) {
                 dashParticles.push({
                     x: player.x + (player.facingRight ? 10 : 50),
-                    y: player.y + 35,
-                    size: Math.random() * 8 + 4,
-                    alpha: 1.0
+                    y: player.y + 35, size: Math.random() * 8 + 4, alpha: 1.0
                 });
             }
         }
@@ -999,8 +976,7 @@
             bProj.x += bProj.vx; bProj.y += (bProj.vy || 0);
             let bProjScreenX = bProj.x - worldOffset;
             if (Math.abs(player.x - bProjScreenX) < 30 && Math.abs(player.y - bProj.y) < 30 && player.iFrameTimer === 0) {
-                handlePlayerHit(bProj.dmg);
-                bProj.dead = true;
+                handlePlayerHit(bProj.dmg); bProj.dead = true;
             }
             if (bProjScreenX < -50 || bProjScreenX > canvas.width + 50 || bProj.y > 450) bProj.dead = true;
         });
@@ -1040,6 +1016,7 @@
         document.getElementById('exp-fill').style.width = `${Math.min(100, (player.exp / player.nextExp) * 100)}%`;
         document.getElementById('hud-coins').innerText = `🪙 ${player.coins}`;
         
+        // Pink Paw vs Empty Paw Life Icons
         let totalPawCapacity = Math.max(9, player.lives);
         let livesStr = '';
         for (let i = 0; i < totalPawCapacity; i++) {
@@ -1050,24 +1027,6 @@
             }
         }
         document.getElementById('hud-lives-icons').innerHTML = livesStr;
-        
-        let hudSkillList = [];
-        player.slots.forEach((skillKey, idx) => {
-            let label = SLOT_KEYS[idx];
-            if (!skillKey) {
-                hudSkillList.push(`${label} --`);
-            } else {
-                let name = ALL_SKILLS[skillKey].short;
-                let cdText = '';
-                if (skillKey === 'shuriken' && player.skill1Cd > 0) cdText = ` ${Math.ceil(player.skill1Cd/60)}s`;
-                else if (skillKey === 'shockwave' && player.skill2Cd > 0) cdText = ` ${Math.ceil(player.skill2Cd/60)}s`;
-                else if (skillKey === 'helper' && player.helperCd > 0) cdText = ` ${Math.ceil(player.helperCd/60)}s`;
-                else if (skillKey === 'ult' && player.ultCd > 0) cdText = ` ${Math.ceil(player.ultCd/60)}s`;
-                
-                hudSkillList.push(`${label} ${name}${cdText}`);
-            }
-        });
-        document.getElementById('hud-skills').innerText = hudSkillList.join(' | ');
     }
 
     function startBonusStageLoop() {
@@ -1128,7 +1087,7 @@
         if (bonusTimer <= 0) { gameState = 'SHOP'; openShopAfterBonus(); }
     }
 
-    // --- TOUGHER BOSSES WITH UNIQUE SIGNATURE ATTACKS ---
+    // --- BOSSES WITH SIGNATURE ATTACKS ---
     function startBossFight() {
         bossFightActive = true; gameState = 'BOSS';
         updateBGMState();
@@ -1136,8 +1095,7 @@
         boss = {
             x: worldOffset + 700, y: 280, width: 100, height: 100,
             hp: hpMultiplier, maxHp: hpMultiplier,
-            phase: 1, hitReact: 0,
-            attackTimer: 120, telegraphTimer: 0, attackType: '',
+            phase: 1, hitReact: 0, attackTimer: 120, telegraphTimer: 0,
             
             update: function() {
                 let targetX = worldOffset + player.x;
@@ -1154,9 +1112,7 @@
                 }
 
                 this.attackTimer--;
-                if (this.attackTimer <= 40 && this.attackTimer > 0) {
-                    this.telegraphTimer = 40;
-                }
+                if (this.attackTimer <= 40 && this.attackTimer > 0) this.telegraphTimer = 40;
                 
                 if (this.attackTimer <= 0) {
                     this.executeSignatureAttack();
@@ -1174,9 +1130,7 @@
                         bossProjectiles.push({ x: this.x, y: 350, vx: -6, vy: 0, dmg: 22 });
                         break;
                     case 2:
-                        for (let i = -1; i <= 1; i++) {
-                            bossProjectiles.push({ x: this.x, y: this.y + 30, vx: -7, vy: i * 2, dmg: 25 });
-                        }
+                        for (let i = -1; i <= 1; i++) bossProjectiles.push({ x: this.x, y: this.y + 30, vx: -7, vy: i * 2, dmg: 25 });
                         break;
                     case 3:
                         bossProjectiles.push({ x: this.x, y: 340, vx: -5, vy: 0, dmg: 30 });
@@ -1185,9 +1139,7 @@
                         bossProjectiles.push({ x: pWorldX, y: 0, vx: 0, vy: 7, dmg: 32 });
                         break;
                     case 5:
-                        for (let i = 0; i < 4; i++) {
-                            bossProjectiles.push({ x: this.x - (i * 30), y: 150 + (i * 20), vx: -8, vy: 2, dmg: 26 });
-                        }
+                        for (let i = 0; i < 4; i++) bossProjectiles.push({ x: this.x - (i * 30), y: 150 + (i * 20), vx: -8, vy: 2, dmg: 26 });
                         break;
                     case 6:
                         visualEffects.push({ type: 'bell_shockwave', x: pWorldX, y: player.y, radius: 20, maxRadius: 100, alpha: 1.0 });
@@ -1208,19 +1160,16 @@
     }
 
     function triggerBossDefeat() {
-        bossFightActive = false; boss = null;
-        gameState = 'BONUS_NOTICE';
-        document.getElementById('bonus-notice').classList.remove('hidden');
-        updateBGMState();
+        bossFightActive = false; boss = null; gameState = 'BONUS_NOTICE';
+        document.getElementById('bonus-notice').classList.remove('hidden'); updateBGMState();
     }
 
     function triggerGameOver() {
         gameState = 'GAMEOVER';
-        document.getElementById('game-over').classList.remove('hidden');
-        updateBGMState();
+        document.getElementById('game-over').classList.remove('hidden'); updateBGMState();
     }
 
-    // --- DETAILED REALISTIC THEMATIC BACKGROUNDS ---
+    // --- DETAILED BACKGROUNDS ---
     function drawStageBackground(stage, offset) {
         let bgScroll = (offset * 0.3) % canvas.width;
 
@@ -1229,111 +1178,55 @@
                 let vGrad = ctx.createLinearGradient(0, 0, 0, 400);
                 vGrad.addColorStop(0, '#ffd166'); vGrad.addColorStop(1, '#ffb703');
                 ctx.fillStyle = vGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
                 ctx.fillStyle = '#8d6e63';
                 for (let i = -bgScroll; i < canvas.width + 200; i += 280) {
                     ctx.fillRect(i, 250, 100, 130);
-                    ctx.fillStyle = '#d4a373';
-                    ctx.beginPath(); ctx.moveTo(i - 10, 250); ctx.lineTo(i + 50, 190); ctx.lineTo(i + 110, 250); ctx.fill();
-                    ctx.fillStyle = '#5d4037'; ctx.fillRect(i + 70, 180, 15, 30);
-                    ctx.fillStyle = '#fefae0'; ctx.fillRect(i + 35, 280, 30, 30);
+                    ctx.fillStyle = '#d4a373'; ctx.beginPath(); ctx.moveTo(i - 10, 250); ctx.lineTo(i + 50, 190); ctx.lineTo(i + 110, 250); ctx.fill();
                     ctx.fillStyle = '#8d6e63';
                 }
                 ctx.fillStyle = '#588157'; ctx.fillRect(0, 380, canvas.width, 120);
                 break;
-
             case 2:
                 let hGrad = ctx.createLinearGradient(0, 0, 0, 400);
                 hGrad.addColorStop(0, '#2a9d8f'); hGrad.addColorStop(1, '#264653');
                 ctx.fillStyle = hGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                for (let i = -bgScroll; i < canvas.width + 300; i += 350) {
-                    ctx.fillRect(i + 40, 180, 120, 120);
-                    ctx.fillRect(i + 95, 80, 10, 100);
-                }
                 ctx.fillStyle = '#1d3557'; ctx.fillRect(0, 300, canvas.width, 80);
                 ctx.fillStyle = '#e76f51'; ctx.fillRect(0, 380, canvas.width, 120);
                 break;
-
             case 3:
                 let yGrad = ctx.createLinearGradient(0, 0, 0, 400);
                 yGrad.addColorStop(0, '#3a0ca3'); yGrad.addColorStop(1, '#7209b7');
                 ctx.fillStyle = yGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                for (let i = -bgScroll; i < canvas.width + 200; i += 220) {
-                    ctx.fillStyle = '#4cc9f0'; ctx.beginPath(); ctx.arc(i + 50, 180, 60, 0, Math.PI*2); ctx.fill();
-                    ctx.fillStyle = '#f72585'; ctx.beginPath(); ctx.arc(i + 130, 210, 45, 0, Math.PI*2); ctx.fill();
-                    ctx.fillStyle = '#4361ee'; ctx.fillRect(i + 40, 240, 20, 140);
-                }
                 ctx.fillStyle = '#240046'; ctx.fillRect(0, 380, canvas.width, 120);
                 break;
-
             case 4:
                 let cGrad = ctx.createLinearGradient(0, 0, 0, 400);
                 cGrad.addColorStop(0, '#ddb892'); cGrad.addColorStop(1, '#b08968');
                 ctx.fillStyle = cGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = '#7f5539';
-                for (let i = -bgScroll; i < canvas.width + 150; i += 180) {
-                    ctx.fillRect(i, 160, 140, 220);
-                    ctx.fillStyle = '#adb5bd'; ctx.fillRect(i + 20, 200, 60, 12);
-                    ctx.fillStyle = '#7f5539';
-                }
                 ctx.fillStyle = '#9c6644'; ctx.fillRect(0, 380, canvas.width, 120);
                 break;
-
             case 5:
                 let mGrad = ctx.createLinearGradient(0, 0, 0, 400);
                 mGrad.addColorStop(0, '#03071e'); mGrad.addColorStop(1, '#370617');
                 ctx.fillStyle = mGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = '#fefae0'; ctx.beginPath(); ctx.arc(750, 90, 50, 0, Math.PI*2); ctx.fill();
-
-                ctx.fillStyle = '#03071e';
-                for (let i = -bgScroll; i < canvas.width + 150; i += 140) {
-                    ctx.fillRect(i, 200, 120, 180);
-                    ctx.fillStyle = '#ffb703'; ctx.fillRect(i + 30, 240, 15, 25);
-                    ctx.fillStyle = '#03071e';
-                }
                 ctx.fillStyle = '#6a040f'; ctx.fillRect(0, 380, canvas.width, 120);
                 break;
-
             case 6:
                 let tGrad = ctx.createLinearGradient(0, 0, 0, 400);
                 tGrad.addColorStop(0, '#212529'); tGrad.addColorStop(1, '#495057');
                 ctx.fillStyle = tGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = '#ffb703';
-                for (let i = -bgScroll; i < canvas.width + 250; i += 280) {
-                    ctx.beginPath(); ctx.arc(i + 80, 150, 50, 0, Math.PI*2); ctx.fill();
-                }
                 ctx.fillStyle = '#343a40'; ctx.fillRect(0, 380, canvas.width, 120);
                 break;
-
             case 7:
                 let clGrad = ctx.createLinearGradient(0, 0, 0, 400);
                 clGrad.addColorStop(0, '#cdb4db'); clGrad.addColorStop(1, '#ffc6ff');
                 ctx.fillStyle = clGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = '#ffffff';
-                for (let i = -bgScroll; i < canvas.width + 200; i += 250) {
-                    ctx.beginPath(); ctx.arc(i + 60, 280, 60, 0, Math.PI*2); ctx.arc(i + 120, 270, 75, 0, Math.PI*2); ctx.fill();
-                }
                 ctx.fillStyle = '#b8c0ff'; ctx.fillRect(0, 380, canvas.width, 120);
                 break;
-
             case 8:
                 let dGrad = ctx.createLinearGradient(0, 0, 0, 400);
                 dGrad.addColorStop(0, '#000000'); dGrad.addColorStop(1, '#3c096c');
                 ctx.fillStyle = dGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = '#240046';
-                for (let i = -bgScroll; i < canvas.width + 180; i += 200) {
-                    ctx.fillRect(i, 100, 40, 280);
-                    ctx.fillStyle = '#7209b7'; ctx.beginPath(); ctx.arc(i + 20, 180, 12, 0, Math.PI*2); ctx.fill();
-                    ctx.fillStyle = '#240046';
-                }
                 ctx.fillStyle = '#10002b'; ctx.fillRect(0, 380, canvas.width, 120);
                 break;
         }
@@ -1346,7 +1239,6 @@
     function drawThemeBoss(bScreenX, bossY, stage, phase) {
         ctx.save();
         if (boss.hitReact > 0) ctx.filter = 'brightness(200%)';
-        
         let img = bossImgs[stage];
         if (img && img.complete && img.naturalWidth !== 0) {
             ctx.drawImage(img, bScreenX, bossY, boss.width, boss.height);
@@ -1356,8 +1248,7 @@
         }
 
         if (boss.telegraphTimer > 0) {
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.35)';
-            ctx.fillRect(bScreenX - 200, 350, 400, 30);
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.35)'; ctx.fillRect(bScreenX - 200, 350, 400, 30);
         }
         ctx.restore();
     }
@@ -1377,13 +1268,11 @@
 
         stageHazards.forEach(hz => {
             let hzScreenX = hz.x - worldOffset;
-            ctx.fillStyle = '#f72585';
-            ctx.beginPath(); ctx.arc(hzScreenX, hz.y, hz.radius, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#f72585'; ctx.beginPath(); ctx.arc(hzScreenX, hz.y, hz.radius, 0, Math.PI * 2); ctx.fill();
         });
 
         dashParticles.forEach(p => {
-            ctx.fillStyle = `rgba(56, 189, 248, ${p.alpha})`;
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = `rgba(56, 189, 248, ${p.alpha})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
         });
 
         visualEffects.forEach(fx => {
@@ -1393,15 +1282,11 @@
                 ctx.beginPath(); ctx.ellipse(fxScreenX, fx.y, 35 * (1 - fx.timer/fx.maxTimer), 10, 0, 0, Math.PI * 2); ctx.fill();
             } else if (fx.type === 'bell_shockwave') {
                 let fxScreenX = fx.x - worldOffset;
-                ctx.save();
-                ctx.strokeStyle = `rgba(255, 209, 102, ${fx.alpha})`; ctx.lineWidth = 3;
-                ctx.beginPath(); ctx.arc(fxScreenX, fx.y, fx.radius, 0, Math.PI * 2); ctx.stroke();
-                ctx.restore();
+                ctx.save(); ctx.strokeStyle = `rgba(255, 209, 102, ${fx.alpha})`; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(fxScreenX, fx.y, fx.radius, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
             } else if (fx.type === 'paw_tempest') {
-                ctx.save();
-                ctx.fillStyle = `rgba(255, 209, 102, ${fx.timer/fx.maxTimer})`;
-                ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 250 * (1 - fx.timer/fx.maxTimer), 0, Math.PI*2); ctx.fill();
-                ctx.restore();
+                ctx.save(); ctx.fillStyle = `rgba(255, 209, 102, ${fx.timer/fx.maxTimer})`;
+                ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 250 * (1 - fx.timer/fx.maxTimer), 0, Math.PI*2); ctx.fill(); ctx.restore();
             }
         });
 
@@ -1410,8 +1295,7 @@
         if (player.iFrameTimer % 6 < 3) {
             let renderX = player.x;
             if (!player.facingRight) {
-                ctx.scale(-1, 1);
-                renderX = -player.x - player.width;
+                ctx.scale(-1, 1); renderX = -player.x - player.width;
             }
             if (catImg.complete && catImg.naturalWidth !== 0) {
                 ctx.drawImage(catImg, renderX, player.y, player.width, player.height);
@@ -1426,23 +1310,19 @@
                     ctx.strokeStyle = player.unlockedFireClaw ? '#ff4800' : (player.attackStep === 3 ? '#ffd166' : '#38bdf8');
                     ctx.beginPath(); ctx.arc(slashX, player.y + 35, 35, -Math.PI/3, Math.PI/3); ctx.stroke();
                 } else if (player.attackType === 'heavy') {
-                    ctx.strokeStyle = '#ff4d6d';
-                    ctx.beginPath(); ctx.arc(slashX, player.y + 30, 42, 0, Math.PI/1.2); ctx.stroke();
+                    ctx.strokeStyle = '#ff4d6d'; ctx.beginPath(); ctx.arc(slashX, player.y + 30, 42, 0, Math.PI/1.2); ctx.stroke();
                 }
             }
         }
         ctx.restore();
 
-        // Kitten Helper Image Render
+        // Kitten Helper Render
         if (player.helperTimer > 0) {
             let helperW = 40, helperH = 40;
             if (helperImg.complete && helperImg.naturalWidth !== 0) {
                 ctx.drawImage(helperImg, helperKitten.x - helperW / 2, helperKitten.y - helperH / 2, helperW, helperH);
             } else {
-                ctx.fillStyle = '#ffb703';
-                ctx.beginPath(); ctx.arc(helperKitten.x, helperKitten.y, 14, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
-                ctx.fillText("🐾", helperKitten.x, helperKitten.y + 4);
+                ctx.fillStyle = '#ffb703'; ctx.beginPath(); ctx.arc(helperKitten.x, helperKitten.y, 14, 0, Math.PI * 2); ctx.fill();
             }
         }
 
@@ -1459,7 +1339,6 @@
                 else { ctx.fillStyle = '#c19a6b'; ctx.fillRect(screenX, en.y, en.width, en.height); }
             }
             ctx.restore();
-
             ctx.fillStyle = '#ff4d6d'; ctx.fillRect(screenX, en.y - 8, en.width, 4);
             ctx.fillStyle = '#4ade80'; ctx.fillRect(screenX, en.y - 8, en.width * (en.hp / en.maxHp), 4);
         });
@@ -1467,18 +1346,16 @@
         // Player Projectiles
         projectiles.forEach(proj => {
             let screenX = proj.x - worldOffset;
-            ctx.save();
-            ctx.translate(screenX, proj.y); ctx.rotate(proj.rotation);
+            ctx.save(); ctx.translate(screenX, proj.y); ctx.rotate(proj.rotation);
             ctx.fillStyle = proj.type === 'helper_bullet' ? '#ffd166' : '#ff758c';
             ctx.beginPath(); ctx.arc(0, 0, proj.type === 'helper_bullet' ? 6 : 10, 0, Math.PI * 2); ctx.fill();
             ctx.restore();
         });
 
-        // Boss Projectiles Render
+        // Boss Projectiles
         bossProjectiles.forEach(bProj => {
             let bProjScreenX = bProj.x - worldOffset;
-            ctx.fillStyle = '#ef4444';
-            ctx.beginPath(); ctx.arc(bProjScreenX, bProj.y, 12, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(bProjScreenX, bProj.y, 12, 0, Math.PI * 2); ctx.fill();
         });
 
         // Boss Render
@@ -1492,7 +1369,7 @@
             ctx.fillText(`STAGE ${currentStage} BOSS - PHASE ${boss.phase}`, canvas.width / 2, 33);
         }
 
-        // Floating Damage Popups (Enemies + Player)
+        // Floating Damage Popups
         damagePopups.forEach(pop => {
             let drawX = pop.isPlayerDmg ? pop.x : (pop.x - worldOffset);
             ctx.fillStyle = pop.color;
@@ -1511,57 +1388,17 @@
     // --- AQUARIUM BONUS STAGE BG & BIG COUNTDOWN RENDER ---
     function renderBonusStage() {
         let waterGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        waterGrad.addColorStop(0, '#028090');
-        waterGrad.addColorStop(0.4, '#005f73');
-        waterGrad.addColorStop(1, '#0a2133');
-        ctx.fillStyle = waterGrad;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-        for (let i = 0; i < 4; i++) {
-            let startX = 120 + (i * 200) + Math.sin(frameCount * 0.02 + i) * 20;
-            ctx.beginPath();
-            ctx.moveTo(startX, 0); ctx.lineTo(startX + 80, 0);
-            ctx.lineTo(startX + 180, canvas.height); ctx.lineTo(startX + 60, canvas.height);
-            ctx.fill();
-        }
+        waterGrad.addColorStop(0, '#028090'); waterGrad.addColorStop(0.4, '#005f73'); waterGrad.addColorStop(1, '#0a2133');
+        ctx.fillStyle = waterGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         let sandGrad = ctx.createLinearGradient(0, 370, 0, canvas.height);
         sandGrad.addColorStop(0, '#e9c46a'); sandGrad.addColorStop(1, '#cd8441');
-        ctx.fillStyle = sandGrad;
-        ctx.fillRect(0, 370, canvas.width, 130);
-
-        ctx.fillStyle = 'rgba(0,0,0,0.1)'; ctx.fillRect(0, 370, canvas.width, 8);
-
-        const pebbles = [
-            { x: 80, y: 390, r: 10, color: '#f4a261' }, { x: 140, y: 405, r: 7, color: '#2a9d8f' },
-            { x: 300, y: 395, r: 12, color: '#e76f51' }, { x: 500, y: 400, r: 9, color: '#264653' },
-            { x: 720, y: 390, r: 11, color: '#e9c46a' }, { x: 820, y: 410, r: 8, color: '#f4a261' }
-        ];
-        pebbles.forEach(p => {
-            ctx.fillStyle = p.color;
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
-        });
-
-        for (let xPos = 40; xPos < canvas.width; xPos += 120) {
-            ctx.strokeStyle = (xPos % 240 === 0) ? '#2a9d8f' : '#38b000';
-            ctx.lineWidth = 10; ctx.lineCap = 'round';
-            ctx.beginPath(); ctx.moveTo(xPos, 380);
-            let wave = Math.sin(frameCount * 0.04 + xPos) * 20;
-            ctx.quadraticCurveTo(xPos + wave, 280, xPos - wave, 200);
-            ctx.stroke();
-        }
+        ctx.fillStyle = sandGrad; ctx.fillRect(0, 370, canvas.width, 130);
 
         bonusBubbles.forEach(b => {
             ctx.save();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-            ctx.fill(); ctx.stroke();
-            
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.beginPath(); ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.3, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
             ctx.restore();
         });
 
@@ -1579,16 +1416,6 @@
             }
         });
 
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)'; ctx.lineWidth = 10;
-        ctx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
-
-        let glassShine = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        glassShine.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
-        glassShine.addColorStop(0.3, 'rgba(255, 255, 255, 0.0)');
-        glassShine.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
-        ctx.fillStyle = glassShine;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
         // Top Left Stats HUD
         ctx.fillStyle = '#ffd166'; ctx.font = 'bold 22px sans-serif'; ctx.textAlign = 'left';
         let remainingSecs = Math.ceil(bonusTimer / 60);
@@ -1597,25 +1424,21 @@
 
         // --- CLEAR BIG 5-4-3-2-1 COUNTDOWN OVERLAY ---
         if (remainingSecs <= 5 && remainingSecs > 0) {
-            let pulseProgress = (bonusTimer % 60) / 60; // 1 -> 0
-            let scaleFactor = 1.0 + (pulseProgress * 0.4); // Pulsating pop effect on tick
+            let pulseProgress = (bonusTimer % 60) / 60;
+            let scaleFactor = 1.0 + (pulseProgress * 0.4);
             
             ctx.save();
             ctx.translate(canvas.width / 2, 180);
             ctx.scale(scaleFactor, scaleFactor);
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
 
-            // Glowing Outer Ring/Text Shadow
             ctx.shadowColor = remainingSecs <= 2 ? '#ff0055' : '#ffb703';
             ctx.shadowBlur = 30;
             ctx.fillStyle = remainingSecs <= 2 ? '#ff4d6d' : '#ffd166';
             ctx.font = '900 130px "Segoe UI", sans-serif';
             ctx.fillText(remainingSecs.toString(), 0, 0);
 
-            // Inner Sharp Text
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = '#ffffff';
+            ctx.shadowBlur = 0; ctx.fillStyle = '#ffffff';
             ctx.fillText(remainingSecs.toString(), 0, 0);
             ctx.restore();
         }
