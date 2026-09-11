@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ninja Cat: The Whiskered Realm (PC Skill Hotbar & Balanced Edition)</title>
+    <title>Ninja Cat: The Whiskered Realm (Stage Monster Sprites Edition)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -126,7 +126,31 @@
         .shop-card-desc { font-size: 9px; color: #c4b5fd; line-height: 1.2; }
         .shop-card-cost { font-size: 10px; color: #4ade80; font-weight: bold; }
 
-        /* TOUCH & SKILL HOTBAR CONTROLS */
+        /* PC SKILL BAR (BOTTOM LEFT) */
+        #pc-skill-bar {
+            position: absolute; bottom: 10px; left: 12px;
+            display: flex; gap: 6px; z-index: 8; pointer-events: none;
+        }
+        .pc-skill-slot {
+            width: 46px; height: 46px; background: rgba(22, 17, 36, 0.88);
+            border: 1.5px solid rgba(150, 120, 200, 0.6); border-radius: 8px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+        .pc-skill-slot .key-tag {
+            position: absolute; top: 2px; left: 4px;
+            font-size: 8px; color: #ffd166; font-weight: bold;
+        }
+        .pc-skill-slot .icon-symbol { font-size: 20px; line-height: 1; }
+        .pc-skill-slot .cd-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.78); border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 900; color: #ffd166;
+        }
+
+        /* ON-SCREEN ERGONOMIC MOBILE TOUCH CONTROLS */
         #touch-controls {
             position: absolute; bottom: 6px; left: 0; width: 100%; height: 160px;
             pointer-events: none; z-index: 8;
@@ -230,16 +254,45 @@
             </div>
         </div>
 
-        <!-- TOUCH CONTROLS & SKILL HOTBAR -->
+        <!-- PC SKILL BAR (BOTTOM LEFT) -->
+        <div id="pc-skill-bar" class="hidden">
+            <div class="pc-skill-slot" id="pc-slot-z">
+                <span class="key-tag">Z</span>
+                <span class="icon-symbol" id="pc-icon-z">🐾</span>
+                <div class="cd-overlay hidden" id="pc-cd-z"></div>
+            </div>
+            <div class="pc-skill-slot" id="pc-slot-x">
+                <span class="key-tag">X</span>
+                <span class="icon-symbol" id="pc-icon-x">🔨</span>
+                <div class="cd-overlay hidden" id="pc-cd-x"></div>
+            </div>
+            <div class="pc-skill-slot" id="pc-slot-c">
+                <span class="key-tag">C</span>
+                <span class="icon-symbol" id="pc-icon-c">🗡️</span>
+                <div class="cd-overlay hidden" id="pc-cd-c"></div>
+            </div>
+            <div class="pc-skill-slot" id="pc-slot-v">
+                <span class="key-tag">V</span>
+                <span class="icon-symbol" id="pc-icon-v">🔔</span>
+                <div class="cd-overlay hidden" id="pc-cd-v"></div>
+            </div>
+            <div class="pc-skill-slot" id="pc-slot-b">
+                <span class="key-tag">B</span>
+                <span class="icon-symbol" id="pc-icon-b">🌀</span>
+                <div class="cd-overlay hidden" id="pc-cd-b"></div>
+            </div>
+        </div>
+
+        <!-- ON-SCREEN ERGONOMIC MOBILE TOUCH CONTROLS -->
         <div id="touch-controls">
-            <div class="touch-cluster-left" id="cluster-left">
+            <div class="touch-cluster-left">
                 <div class="touch-btn dpad-btn" id="btn-left">◀</div>
                 <div class="touch-btn dpad-btn" id="btn-right">▶</div>
                 <div class="touch-btn action-btn" id="btn-jump" style="background: rgba(42, 157, 143, 0.75);">JUMP</div>
                 <div class="touch-btn action-btn" id="btn-dash" style="background: rgba(231, 111, 81, 0.75);">DASH</div>
             </div>
             
-            <div class="touch-cluster-right" id="cluster-right">
+            <div class="touch-cluster-right" id="touch-right-skills">
                 <div class="touch-btn skill-icon-btn" id="btn-z">
                     <span class="key-tag">Z</span>
                     <span class="icon-symbol" id="icon-z">🐾</span>
@@ -277,7 +330,7 @@
         <!-- Platform Selection UI -->
         <div style="margin: 6px 0 10px 0; display: flex; gap: 8px; justify-content: center; pointer-events: auto;">
             <button id="platform-mobile-btn" class="menu-btn" style="background: #4a3b6c; border: 2px solid #ffd166; font-size:11px;" onclick="setPlatform('mobile')">📱 Mobile (Touch UI)</button>
-            <button id="platform-pc-btn" class="menu-btn" style="background: #342850; border: 2px solid #7c64a3; font-size:11px;" onclick="setPlatform('pc')">🖥️ PC (Keyboard & Hotbar)</button>
+            <button id="platform-pc-btn" class="menu-btn" style="background: #342850; border: 2px solid #7c64a3; font-size:11px;" onclick="setPlatform('pc')">🖥️ PC (Keyboard & UI Bar)</button>
         </div>
 
         <button class="menu-btn" style="padding: 10px 24px; font-size:14px;" onclick="startGame()">PLAY GAME</button>
@@ -330,8 +383,44 @@
 
     const catImg = new Image(); catImg.src = 'cat.png';
     const salmonImg = new Image(); salmonImg.src = 'salmon.png';
-    const boxImg = new Image(); boxImg.src = 'box.png';
     const helperImg = new Image(); helperImg.src = 'summon-kitten-helper.png';
+
+    // Stage Monster Images Mapping
+    const enemyImgs = {
+        1: { typeA: new Image(), typeB: new Image() },
+        2: { typeA: new Image(), typeB: new Image() },
+        3: { typeA: new Image(), typeB: new Image() },
+        4: { typeA: new Image(), typeB: new Image() },
+        5: { typeA: new Image(), typeB: new Image() },
+        6: { typeA: new Image(), typeB: new Image() },
+        7: { typeA: new Image(), typeB: new Image() },
+        8: { typeA: new Image(), typeB: new Image() }
+    };
+    
+    // Stage 1
+    enemyImgs[1].typeA.src = 'stage1-yarn-puff.png';
+    enemyImgs[1].typeB.src = 'stage1-sleepy-cat-slime.png';
+    // Stage 2
+    enemyImgs[2].typeA.src = 'stage2-flying-sardine.png';
+    enemyImgs[2].typeB.src = 'stage2-bucket-crab.png';
+    // Stage 3
+    enemyImgs[3].typeA.src = 'stage3-vine-yarn-sprite.png';
+    enemyImgs[3].typeB.src = 'stage3-mossy-yarn-mite.png';
+    // Stage 4
+    enemyImgs[4].typeA.src = 'stage4-paper-knight.png';
+    enemyImgs[4].typeB.src = 'stage4-cardboard-bat.png';
+    // Stage 5
+    enemyImgs[5].typeA.src = 'stage5-moon-moth.png';
+    enemyImgs[5].typeB.src = 'stage5-chimney-imp.png';
+    // Stage 6
+    enemyImgs[6].typeA.src = 'stage6-windup-bunny.png';
+    enemyImgs[6].typeB.src = 'stage6-gear-bot.png';
+    // Stage 7
+    enemyImgs[7].typeA.src = 'stage7-rainbow-cloudlet.png';
+    enemyImgs[7].typeB.src = 'stage7-skyfish.png';
+    // Stage 8
+    enemyImgs[8].typeA.src = 'stage8-shadow-paw.png';
+    enemyImgs[8].typeB.src = 'stage8-flame-mew.png';
 
     const bossImgs = {
         1: new Image(), 2: new Image(), 3: new Image(), 4: new Image(),
@@ -586,11 +675,11 @@
         if (platform === 'mobile') {
             mobileBtn.style.background = '#4a3b6c'; mobileBtn.style.borderColor = '#ffd166';
             pcBtn.style.background = '#342850'; pcBtn.style.borderColor = '#7c64a3';
-            infoEl.innerHTML = '📱 <strong>Mobile Mode:</strong> On-screen touch buttons enabled for movement, jump, dash, and skills [Z][X][C][V][B].';
+            infoEl.innerHTML = '📱 <strong>Mobile Mode:</strong> On-screen touch controls enabled for movement, jump, dash, and skills [Z][X][C][V][B].';
         } else {
             pcBtn.style.background = '#4a3b6c'; pcBtn.style.borderColor = '#ffd166';
             mobileBtn.style.background = '#342850'; mobileBtn.style.borderColor = '#7c64a3';
-            infoEl.innerHTML = '🖥️ <strong>PC Mode:</strong> Use keyboard [Arrows] to move/jump, [Double Arrow] to dash, and [Z][X][C][V][B] for skills (Skill hotbar displayed on screen).';
+            infoEl.innerHTML = '🖥️ <strong>PC Mode:</strong> Bottom-left skill slots [Z][X][C][V][B] enabled. Use Keyboard Arrow keys to move, [Space/Up] to jump, [Double Arrow] to dash.';
         }
         saveGame();
     }
@@ -736,15 +825,14 @@
         document.getElementById('ui-overlay').classList.remove('hidden');
         document.getElementById('ui-overlay').classList.remove('bonus-mode');
 
-        const clusterLeft = document.getElementById('cluster-left');
-        const clusterRight = document.getElementById('cluster-right');
-        
+        const touchControlsEl = document.getElementById('touch-controls');
+        const pcSkillBarEl = document.getElementById('pc-skill-bar');
         if (gamePlatform === 'pc') {
-            clusterLeft.style.display = 'none';   // Hide D-Pad movement on PC
-            clusterRight.style.display = 'block'; // Show Skill Hotbar on PC
+            touchControlsEl.classList.add('hidden');
+            pcSkillBarEl.classList.remove('hidden');
         } else {
-            clusterLeft.style.display = 'flex';
-            clusterRight.style.display = 'block';
+            touchControlsEl.classList.remove('hidden');
+            pcSkillBarEl.classList.add('hidden');
         }
 
         initStage(); gameState = 'PLAYING'; updateBGMState();
@@ -809,13 +897,26 @@
         renderShopCards();
     }
 
+    function getLifePrice() {
+        let stageTier = Math.floor((currentStage - 1) / 2);
+        return 30 + (stageTier * 15);
+    }
+    function getLife3Price() {
+        let stageTier = Math.floor((currentStage - 1) / 2);
+        return 80 + (stageTier * 35);
+    }
+
     function renderShopCards() {
         const grid = document.getElementById('shop-grid-container');
         grid.innerHTML = '';
 
+        let life1Cost = getLifePrice();
+        let life3Cost = getLife3Price();
+        let isMaxLives = player.lives >= 9;
+
         const shopItems = [
-            { id: 'life1', icon: '🐾', title: 'Extra Paw Life (+1 Life)', desc: 'Fixed price: Restores 1 pink paw life.', cost: 30, action: () => buyLife(1) },
-            { id: 'life5', icon: '🐾🐾', title: '5x Paw Lives Bundle (+5 Lives)', desc: 'Bundle value! Get 5 lives for 120 Coins.', cost: 120, action: () => buyLife(5) },
+            { id: 'life1', icon: '🐾', title: 'Extra Paw Life (+1 Life)', desc: isMaxLives ? 'Max 9 Lives reached!' : `Restores 1 pink paw life.`, cost: life1Cost, maxed: isMaxLives, action: () => buyLife(1) },
+            { id: 'life3', icon: '🐾🐾🐾', title: '3x Paw Lives Bundle (+3 Lives)', desc: isMaxLives ? 'Max 9 Lives reached!' : `Value bundle! Get 3 lives.`, cost: life3Cost, maxed: isMaxLives, action: () => buyLife(3) },
             { id: 'atk', icon: '⚔️', title: 'Attack Upgrade (+5 ATK)', desc: 'Increases melee & skill damage.', cost: costs.atk, action: () => upgradeStat('atk') },
             { id: 'hp', icon: '💖', title: 'Max HP Upgrade (+25 HP)', desc: 'Expands health bar & refills HP.', cost: costs.hp, action: () => upgradeStat('hp') },
             { id: 'spd', icon: '⚡', title: 'Speed Upgrade (+0.5 SPD)', desc: 'Increases move & dodge speed.', cost: costs.spd, action: () => upgradeStat('spd') },
@@ -830,27 +931,29 @@
 
         shopItems.forEach(item => {
             let card = document.createElement('div');
-            let isUnlocked = item.unlocked;
-            let canAfford = player.coins >= item.cost;
+            let isUnlocked = item.unlocked || item.maxed;
+            let canAfford = player.coins >= item.cost && !item.maxed;
             card.className = 'shop-card ' + (isUnlocked || !canAfford ? 'disabled' : '');
-            let costLabel = isUnlocked ? '✓ UNLOCKED' : `Cost: 🪙 ${item.cost}`;
+            let costLabel = item.maxed ? 'MAX LIVES (9)' : (item.unlocked ? '✓ UNLOCKED' : `Cost: 🪙 ${item.cost}`);
             card.innerHTML = `
                 <div class="shop-card-icon">${item.icon}</div>
                 <div class="shop-card-info">
                     <div class="shop-card-title">${item.title}</div>
                     <div class="shop-card-desc">${item.desc}</div>
-                    <div class="shop-card-cost" style="${isUnlocked ? 'color:#a2d2ff;' : ''}">${costLabel}</div>
+                    <div class="shop-card-cost" style="${item.maxed || item.unlocked ? 'color:#a2d2ff;' : ''}">${costLabel}</div>
                 </div>
             `;
-            if (!isUnlocked && canAfford) card.onclick = item.action;
+            if (!item.maxed && !isUnlocked && canAfford) card.onclick = item.action;
             grid.appendChild(card);
         });
     }
 
     function buyLife(amount) {
-        let cost = amount === 5 ? 120 : 30;
+        if (player.lives >= 9) return;
+        let cost = amount === 3 ? getLife3Price() : getLifePrice();
         if (player.coins >= cost) {
-            sfxCoin(); player.coins -= cost; player.lives += amount;
+            sfxCoin(); player.coins -= cost;
+            player.lives = Math.min(9, player.lives + amount);
             saveGame(); openShopAfterBonus();
         }
     }
@@ -877,14 +980,14 @@
         document.getElementById('shop-menu').classList.add('hidden');
         document.getElementById('ui-overlay').classList.remove('hidden');
         
-        const clusterLeft = document.getElementById('cluster-left');
-        const clusterRight = document.getElementById('cluster-right');
+        const touchControlsEl = document.getElementById('touch-controls');
+        const pcSkillBarEl = document.getElementById('pc-skill-bar');
         if (gamePlatform === 'pc') {
-            clusterLeft.style.display = 'none';
-            clusterRight.style.display = 'block';
+            touchControlsEl.classList.add('hidden');
+            pcSkillBarEl.classList.remove('hidden');
         } else {
-            clusterLeft.style.display = 'flex';
-            clusterRight.style.display = 'block';
+            touchControlsEl.classList.remove('hidden');
+            pcSkillBarEl.classList.add('hidden');
         }
 
         initStage(); gameState = 'PLAYING'; updateBGMState();
@@ -1165,17 +1268,18 @@
         stageHazards = stageHazards.filter(h => h.x > worldOffset - 100);
 
         if (!bossFightActive && worldOffset < stageLength - 200 && frameCount % 90 === 0) {
+            let mType = Math.random() < 0.5 ? 'typeA' : 'typeB';
             enemies.push({
                 x: worldOffset + canvas.width + 50, y: 320, width: 60, height: 50,
                 hp: 40 + (currentStage * 15), maxHp: 40 + (currentStage * 15),
                 speed: 1.2 + (currentStage * 0.1), vx: 0, hitReact: 0,
-                type: Math.random() < 0.5 ? 'salmon' : 'box'
+                type: mType
             });
         }
 
         enemies.forEach(en => {
             if (en.hitReact > 0) { en.hitReact--; en.x += en.vx; } else { en.x -= en.speed; }
-            if (en.type === 'salmon') en.y = 310 + Math.sin(frameCount / 10) * 10;
+            if (en.type === 'typeB') en.y = 310 + Math.sin(frameCount / 10) * 10;
             let enScreenX = en.x - worldOffset;
             if (Math.abs(player.x - enScreenX) < 35 && Math.abs(player.y - en.y) < 30 && player.iFrameTimer === 0) handlePlayerHit(15);
         });
@@ -1240,27 +1344,40 @@
 
         player.slots.forEach((skillKey, idx) => {
             let slotId = SLOT_IDS[idx];
-            let iconEl = document.getElementById(`icon-${slotId}`);
-            let cdEl = document.getElementById(`cd-${slotId}`);
+            let iconSymbol = '🚫';
+            let cdFrames = 0;
 
-            if (!skillKey) {
-                if (iconEl) iconEl.innerText = '🚫';
-                if (cdEl) cdEl.classList.add('hidden');
-            } else {
+            if (skillKey) {
                 let skillInfo = ALL_SKILLS[skillKey];
-                if (iconEl) iconEl.innerText = skillInfo.icon;
-                let cdFrames = 0;
+                iconSymbol = skillInfo.icon;
                 if (skillKey === 'slam') cdFrames = player.slamCd;
                 else if (skillKey === 'shuriken') cdFrames = player.shurikenCd;
                 else if (skillKey === 'shockwave') cdFrames = player.shockwaveCd;
                 else if (skillKey === 'helper') cdFrames = player.helperCd;
                 else if (skillKey === 'ult') cdFrames = player.ultCd;
+            }
 
-                if (cdFrames > 0 && cdEl) {
+            let iconEl = document.getElementById(`icon-${slotId}`);
+            let cdEl = document.getElementById(`cd-${slotId}`);
+            if (iconEl) iconEl.innerText = iconSymbol;
+            if (cdEl) {
+                if (cdFrames > 0) {
                     cdEl.innerText = Math.ceil(cdFrames / 60) + 's';
                     cdEl.classList.remove('hidden');
-                } else if (cdEl) {
+                } else {
                     cdEl.classList.add('hidden');
+                }
+            }
+
+            let pcIconEl = document.getElementById(`pc-icon-${slotId}`);
+            let pcCdEl = document.getElementById(`pc-cd-${slotId}`);
+            if (pcIconEl) pcIconEl.innerText = iconSymbol;
+            if (pcCdEl) {
+                if (cdFrames > 0) {
+                    pcCdEl.innerText = Math.ceil(cdFrames / 60) + 's';
+                    pcCdEl.classList.remove('hidden');
+                } else {
+                    pcCdEl.classList.add('hidden');
                 }
             }
         });
@@ -1466,8 +1583,15 @@
             ctx.fillStyle = phase === 3 ? '#900c3f' : (phase === 2 ? '#c70039' : '#ff8fa3');
             ctx.beginPath(); ctx.roundRect(bScreenX + 10, bossY + 15, 80, 80, 15); ctx.fill();
         }
+        
         if (boss.telegraphTimer > 0) {
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.35)'; ctx.fillRect(bScreenX - 200, 350, 400, 30);
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.45)';
+            ctx.beginPath();
+            ctx.arc(bScreenX + 50, 375, 45, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ff4d6d';
+            ctx.lineWidth = 2;
+            ctx.stroke();
         }
         ctx.restore();
     }
@@ -1567,12 +1691,14 @@
             let screenX = en.x - worldOffset;
             ctx.save();
             if (en.hitReact > 0) ctx.filter = 'brightness(200%)';
-            if (en.type === 'salmon') {
-                if (salmonImg.complete && salmonImg.naturalWidth !== 0) ctx.drawImage(salmonImg, screenX, en.y, en.width, en.height);
-                else { ctx.fillStyle = '#ff9999'; ctx.fillRect(screenX, en.y, en.width, en.height); }
+            let stageEnImgs = enemyImgs[currentStage];
+            let monsterImg = (en.type === 'typeA') ? stageEnImgs.typeA : stageEnImgs.typeB;
+
+            if (monsterImg && monsterImg.complete && monsterImg.naturalWidth !== 0) {
+                ctx.drawImage(monsterImg, screenX, en.y, en.width, en.height);
             } else {
-                if (boxImg.complete && boxImg.naturalWidth !== 0) ctx.drawImage(boxImg, screenX, en.y, en.width, en.height);
-                else { ctx.fillStyle = '#c19a6b'; ctx.fillRect(screenX, en.y, en.width, en.height); }
+                ctx.fillStyle = en.type === 'typeA' ? '#ff9999' : '#c19a6b';
+                ctx.fillRect(screenX, en.y, en.width, en.height);
             }
             ctx.restore();
             ctx.fillStyle = '#ff4d6d'; ctx.fillRect(screenX, en.y - 8, en.width, 4);
