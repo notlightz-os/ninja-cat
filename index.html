@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ninja Cat: The Whiskered Realm (Smooth Floating & Rocking Edition)</title>
+    <title>Ninja Cat: The Whiskered Realm (Clean Boss Edition)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -1503,7 +1503,7 @@
         boss = {
             x: worldOffset + 680, y: 230, width: 150, height: 140,
             hp: progressiveBossHp, maxHp: progressiveBossHp,
-            phase: 1, hitReact: 0, attackTimer: Math.max(60, 150 - (currentStage * 12)), telegraphTimer: 0,
+            phase: 1, hitReact: 0, attackTimer: Math.max(60, 150 - (currentStage * 12)),
             update: function() {
                 let targetX = worldOffset + player.x;
                 let moveSpeed = 0.9 + (currentStage * 0.15) + (this.phase * 0.3);
@@ -1519,7 +1519,6 @@
                 }
 
                 this.attackTimer--;
-                if (this.attackTimer <= 40 && this.attackTimer > 0) this.telegraphTimer = 40;
                 if (this.attackTimer <= 0) {
                     this.executeSignatureAttack();
                     this.attackTimer = Math.max(70, 160 - (currentStage * 10) - (this.phase * 20));
@@ -1654,17 +1653,6 @@
             ctx.fillStyle = phase === 3 ? '#900c3f' : (phase === 2 ? '#c70039' : '#ff8fa3');
             ctx.beginPath(); ctx.roundRect(bScreenX + 15, bossY + 20, boss.width - 30, boss.height - 30, 20); ctx.fill();
         }
-        
-        if (boss.telegraphTimer > 0) {
-            let isBlinkOn = Math.floor(boss.telegraphTimer / 5) % 2 === 0;
-            if (isBlinkOn) {
-                ctx.save();
-                ctx.globalCompositeOperation = 'source-atop';
-                ctx.fillStyle = 'rgba(255, 0, 0, 0.75)';
-                ctx.fillRect(bScreenX, bossY, boss.width, boss.height);
-                ctx.restore();
-            }
-        }
         ctx.restore();
     }
 
@@ -1769,10 +1757,8 @@
             let visualTilt = 0;
 
             if (en.type === 'typeA') {
-                // Style 1: Floating up and down slowly like a bubble or cloud (Smooth Sine Wave)
                 visualOffsetY = Math.sin(frameCount / 50 + en.x * 0.05) * 8;
             } else {
-                // Style 2: Rocking horse slow-motion back and forth (Gentle Rocking Tilt)
                 visualTilt = Math.sin(frameCount / 70 + en.x * 0.05) * 0.08;
             }
 
@@ -1790,7 +1776,6 @@
             }
             ctx.restore();
 
-            // HP bar positioned cleanly above monster
             ctx.fillStyle = '#ff4d6d'; ctx.fillRect(screenX, en.y - 12, en.width, 4);
             ctx.fillStyle = '#4ade80'; ctx.fillRect(screenX, en.y - 12, en.width * (en.hp / en.maxHp), 4);
         });
