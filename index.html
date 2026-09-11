@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ninja Cat: The Whiskered Realm (Mobile & PC)</title>
+    <title>Ninja Cat: The Whiskered Realm (Enhanced Sound & Effects)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -32,6 +32,11 @@
             pointer-events: none; display: flex; flex-direction: column;
             justify-content: space-between; padding: 8px 12px; z-index: 5;
         }
+
+        #ui-overlay.bonus-mode .hud-row:first-child {
+            display: none !important;
+        }
+
         .hud-row { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; }
         .hud-left { display: flex; flex-direction: column; gap: 4px; }
         .hud-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
@@ -44,7 +49,6 @@
         }
         .lives-container { display: flex; align-items: center; gap: 2px; }
         
-        /* Cute Glowing Pink Paw Life Icon Style */
         .pink-paw-icon {
             display: inline-flex; align-items: center; justify-content: center;
             font-size: 14px; color: #ff65a3;
@@ -57,7 +61,6 @@
             50% { transform: scale(1.12); }
         }
 
-        /* Empty Paw Icon when a Life is lost */
         .empty-paw-icon {
             display: inline-flex; align-items: center; justify-content: center;
             font-size: 14px; color: rgba(255, 101, 163, 0.22);
@@ -191,17 +194,17 @@
             </div>
         </div>
 
-        <!-- ON-SCREEN TOUCH CONTROLS FOR MOBILE PLAY -->
+        <!-- ON-SCREEN MOBILE TOUCH CONTROLS -->
         <div id="touch-controls">
-            <!-- Left Controls: D-Pad Movement & Actions -->
+            <!-- Left Controls: Movement -->
             <div class="touch-group">
                 <div class="touch-btn" id="btn-left">◀</div>
                 <div class="touch-btn" id="btn-right">▶</div>
                 <div class="touch-btn touch-btn-wide" id="btn-jump" style="background: rgba(42, 157, 143, 0.75);">JUMP</div>
                 <div class="touch-btn touch-btn-wide" id="btn-dash" style="background: rgba(231, 111, 81, 0.75);">DASH</div>
             </div>
-            <!-- Right Controls: Action & Skill Slots -->
-            <div class="touch-group" style="gap: 4px;">
+            <!-- Right Controls: Skill Slots -->
+            <div class="touch-group" id="touch-right-skills" style="gap: 4px;">
                 <div class="touch-btn" id="btn-z" style="background: rgba(255, 183, 3, 0.8); color: #111;">Z</div>
                 <div class="touch-btn" id="btn-x" style="background: rgba(255, 77, 109, 0.8);">X</div>
                 <div class="touch-btn" id="btn-c">C</div>
@@ -292,12 +295,12 @@
     ];
 
     const ALL_SKILLS = {
-        'strike': { name: 'Paw Strike', short: 'Strike' },
-        'slam': { name: 'Paw Slam', short: 'Slam' },
-        'shuriken': { name: 'Yarn Shuriken', short: 'Shuriken' },
-        'shockwave': { name: 'Sonic Shockwave', short: 'Shockwave' },
-        'helper': { name: 'Kitten Helper', short: 'Helper' },
-        'ult': { name: 'Paw Tempest', short: 'Tempest' }
+        'strike': { name: 'Paw Strike', short: 'Strike', mp: 0, cd: 0 },
+        'slam': { name: 'Paw Slam', short: 'Slam', mp: 8, cd: 90 },         // 1.5s CD
+        'shuriken': { name: 'Yarn Shuriken', short: 'Shuriken', mp: 15, cd: 150 }, // 2.5s CD
+        'shockwave': { name: 'Sonic Shockwave', short: 'Shockwave', mp: 25, cd: 240 }, // 4.0s CD
+        'helper': { name: 'Kitten Helper', short: 'Helper', mp: 30, cd: 900 },    // 15.0s CD
+        'ult': { name: 'Paw Tempest', short: 'Tempest', mp: 40, cd: 720 }      // 12.0s CD
     };
 
     const SLOT_KEYS = ['[Z]', '[X]', '[C]', '[V]', '[B]'];
@@ -320,9 +323,10 @@
         unlockedDashVfx: false,
         unlockedFireClaw: false,
 
-        ultCd: 0, helperCd: 0, helperTimer: 0,
+        slamCd: 0, shurikenCd: 0, shockwaveCd: 0, helperCd: 0, ultCd: 0,
+        helperTimer: 0,
         isAttacking: false, attackType: '', attackTimer: 0, attackStep: 0,
-        dashTimer: 0, dashCooldown: 0, skill1Cd: 0, skill2Cd: 0, iFrameTimer: 0
+        dashTimer: 0, dashCooldown: 0, iFrameTimer: 0
     };
 
     let helperKitten = { x: 0, y: 0, targetAngle: 0 };
@@ -346,7 +350,7 @@
     let frameCount = 0;
     let screenShakeTimer = 0;
 
-    // --- SFX & DYNAMIC PROCEDURAL BGM ENGINE ---
+    // --- REFINED RELAXING & CHILL BGM ENGINE ---
     let audioCtx = null;
     let bgmMuted = false;
     let currentBGMTheme = null;
@@ -354,17 +358,17 @@
     let bgmTimer = null;
 
     const BGM_THEMES = {
-        'MENU': { speed: 280, type: 'sine', notes: [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 349.23, 293.66] },
-        'STAGE_1': { speed: 220, type: 'triangle', notes: [261.63, 329.63, 392.00, 440.00, 392.00, 329.63, 293.66, 329.63] },
-        'STAGE_2': { speed: 180, type: 'square', notes: [220.00, 261.63, 329.63, 220.00, 293.66, 349.23, 261.63, 220.00] },
-        'STAGE_3': { speed: 320, type: 'sine', notes: [196.00, 246.94, 293.66, 329.63, 293.66, 246.94, 220.00, 196.00] },
-        'STAGE_4': { speed: 240, type: 'triangle', notes: [174.61, 220.00, 261.63, 220.00, 174.61, 130.81, 174.61, 220.00] },
-        'STAGE_5': { speed: 160, type: 'sawtooth', notes: [146.83, 174.61, 220.00, 146.83, 261.63, 220.00, 174.61, 146.83] },
-        'STAGE_6': { speed: 150, type: 'square', notes: [261.63, 392.00, 293.66, 440.00, 329.63, 493.88, 392.00, 261.63] },
-        'STAGE_7': { speed: 260, type: 'sine', notes: [523.25, 659.25, 783.99, 1046.50, 783.99, 659.25, 587.33, 523.25] },
-        'STAGE_8': { speed: 140, type: 'sawtooth', notes: [130.81, 155.56, 196.00, 261.63, 196.00, 155.56, 146.83, 130.81] },
-        'BOSS': { speed: 120, type: 'sawtooth', notes: [110.00, 116.54, 130.81, 110.00, 146.83, 130.81, 116.54, 110.00] },
-        'BONUS': { speed: 170, type: 'sine', notes: [329.63, 392.00, 523.25, 659.25, 523.25, 392.00, 440.00, 349.23] }
+        'MENU': { speed: 450, type: 'sine', notes: [261.63, 329.63, 392.00, 440.00, 392.00, 329.63, 293.66, 261.63] },
+        'STAGE_1': { speed: 420, type: 'sine', notes: [261.63, 293.66, 329.63, 392.00, 440.00, 392.00, 329.63, 293.66] },
+        'STAGE_2': { speed: 480, type: 'triangle', notes: [220.00, 261.63, 293.66, 329.63, 392.00, 329.63, 293.66, 220.00] },
+        'STAGE_3': { speed: 500, type: 'sine', notes: [196.00, 220.00, 261.63, 293.66, 329.63, 293.66, 261.63, 196.00] },
+        'STAGE_4': { speed: 440, type: 'triangle', notes: [220.00, 261.63, 329.63, 440.00, 392.00, 329.63, 261.63, 220.00] },
+        'STAGE_5': { speed: 460, type: 'sine', notes: [174.61, 220.00, 261.63, 293.66, 329.63, 261.63, 220.00, 174.61] },
+        'STAGE_6': { speed: 400, type: 'sine', notes: [261.63, 329.63, 392.00, 523.25, 440.00, 392.00, 329.63, 261.63] },
+        'STAGE_7': { speed: 520, type: 'sine', notes: [329.63, 392.00, 440.00, 523.25, 659.25, 523.25, 440.00, 392.00] },
+        'STAGE_8': { speed: 480, type: 'triangle', notes: [146.83, 174.61, 220.00, 261.63, 293.66, 261.63, 220.00, 174.61] },
+        'BOSS': { speed: 360, type: 'triangle', notes: [164.81, 196.00, 220.00, 246.94, 220.00, 196.00, 164.81, 146.83] },
+        'BONUS': { speed: 380, type: 'sine', notes: [329.63, 392.00, 523.25, 659.25, 523.25, 392.00, 440.00, 349.23] }
     };
 
     function initAudio() {
@@ -374,24 +378,116 @@
         }
     }
 
-    function playTone(freq, duration, type='sine', gainVal=0.08) {
+    function playSoftTone(freq, duration, type='sine', maxGain=0.035) {
         if (!audioCtx) return;
         try {
             let osc = audioCtx.createOscillator();
             let gain = audioCtx.createGain();
-            osc.type = type; osc.frequency.value = freq;
-            gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.type = (type === 'square' || type === 'sawtooth') ? 'triangle' : type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(maxGain, audioCtx.currentTime + 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
             osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + duration);
+            osc.start(); osc.stop(audioCtx.currentTime + duration + 0.05);
         } catch(e){}
     }
 
-    function sfxJump() { playTone(300, 0.15, 'square', 0.08); }
-    function sfxAttack() { playTone(180, 0.1, 'sawtooth', 0.08); }
-    function sfxHit() { playTone(100, 0.15, 'triangle', 0.12); }
-    function sfxCoin() { playTone(800, 0.12, 'sine', 0.1); }
-    function sfxBossHit() { playTone(60, 0.25, 'sawtooth', 0.15); }
+    // --- UNIQUE CUSTOM SFX SOUNDS FOR SKILLS & ACTIONS ---
+    function sfxJump() { playSoftTone(340, 0.12, 'sine', 0.04); }
+    function sfxHit() { playSoftTone(110, 0.15, 'triangle', 0.06); }
+    function sfxCoin() { playSoftTone(659.25, 0.15, 'sine', 0.04); }
+    function sfxBossHit() { playSoftTone(85, 0.25, 'triangle', 0.08); }
+    function sfxNoMp() { playSoftTone(90, 0.1, 'sine', 0.02); }
+
+    // Paw Strike SFX (Light Claw Swipe)
+    function sfxStrike() { playSoftTone(400, 0.06, 'triangle', 0.05); }
+
+    // Paw Slam SFX (Heavy Bass Impact)
+    function sfxSlam() {
+        if (!audioCtx) return;
+        try {
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.25);
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+        } catch(e){}
+    }
+
+    // Yarn Shuriken SFX (Spinning Air Whistle)
+    function sfxShuriken() {
+        if (!audioCtx) return;
+        try {
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+        } catch(e){}
+    }
+
+    // Sonic Shockwave SFX (Resonant Bell Wave Echo)
+    function sfxSonicShockwave() {
+        if (!audioCtx) return;
+        try {
+            [523.25, 659.25, 783.99].forEach((freq, idx) => {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (idx * 0.04));
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime + (idx * 0.04));
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.45 + (idx * 0.04));
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + (idx * 0.04));
+                osc.stop(audioCtx.currentTime + 0.5);
+            });
+        } catch(e){}
+    }
+
+    // Kitten Helper SFX (Cute Summon Arpeggio)
+    function sfxHelperSummon() {
+        if (!audioCtx) return;
+        try {
+            [440, 554.37, 659.25, 880].forEach((freq, idx) => {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (idx * 0.06));
+                gain.gain.setValueAtTime(0.04, audioCtx.currentTime + (idx * 0.06));
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18 + (idx * 0.06));
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + (idx * 0.06));
+                osc.stop(audioCtx.currentTime + 0.25 + (idx * 0.06));
+            });
+        } catch(e){}
+    }
+
+    // Paw Tempest Ultimate SFX (Rolling Tempest Storm)
+    function sfxUltimateTempest() {
+        if (!audioCtx) return;
+        try {
+            for (let i = 0; i < 6; i++) {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(200 + (i * 60), audioCtx.currentTime + (i * 0.08));
+                gain.gain.setValueAtTime(0.06, audioCtx.currentTime + (i * 0.08));
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3 + (i * 0.08));
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + (i * 0.08));
+                osc.stop(audioCtx.currentTime + 0.4 + (i * 0.08));
+            }
+        } catch(e){}
+    }
 
     function getBGMThemeForState() {
         if (gameState === 'MENU' || gameState === 'SHOP') return 'MENU';
@@ -417,7 +513,7 @@
         bgmTimer = setInterval(() => {
             if (!bgmMuted && audioCtx) {
                 let note = theme.notes[bgmStep % theme.notes.length];
-                playTone(note, 0.22, theme.type, 0.035);
+                playSoftTone(note, 0.45, theme.type, 0.025);
                 bgmStep++;
             }
         }, theme.speed);
@@ -578,6 +674,7 @@
         loadGame();
         document.getElementById('main-menu').classList.add('hidden');
         document.getElementById('ui-overlay').classList.remove('hidden');
+        document.getElementById('ui-overlay').classList.remove('bonus-mode');
         initStage();
         gameState = 'PLAYING';
         updateBGMState();
@@ -672,8 +769,8 @@
             { id: 'hp', icon: '💖', title: 'Max HP Upgrade (+25 HP)', desc: 'Expands health bar & refills HP.', cost: costs.hp, action: () => upgradeStat('hp') },
             { id: 'spd', icon: '⚡', title: 'Speed Upgrade (+0.5 SPD)', desc: 'Increases move & dodge speed.', cost: costs.spd, action: () => upgradeStat('spd') },
             { id: 'shuriken', icon: '🗡️', title: 'Yarn Shuriken', desc: 'Throws spinning yarn shuriken.', cost: 80, unlocked: player.unlockedShuriken, action: () => unlockSkill('shuriken', 80) },
-            { id: 'shockwave', icon: '🔔', title: 'Sonic Shockwave', desc: 'Emits heavy sonic wave.', cost: 150, unlocked: player.unlockedShockwave, action: () => unlockSkill('shockwave', 150) },
-            { id: 'helper', icon: '🐾', title: 'Kitten Helper', desc: 'Summons kitten helper for 15s.', cost: 200, unlocked: player.unlockedHelper, action: () => unlockSkill('helper', 200) },
+            { id: 'shockwave', icon: '🔔', title: 'Sonic Shockwave', desc: 'Emits expanding sonic ripple wave.', cost: 150, unlocked: player.unlockedShockwave, action: () => unlockSkill('shockwave', 150) },
+            { id: 'helper', icon: '🐾', title: 'Kitten Helper', desc: 'Summons kitten helper for 12s.', cost: 200, unlocked: player.unlockedHelper, action: () => unlockSkill('helper', 200) },
             { id: 'ult', icon: '🌀', title: 'Paw Tempest', desc: 'Unleashes screen paw storm.', cost: 300, unlocked: player.unlockedUltimate, action: () => unlockSkill('ult', 300) },
             { id: 'dash', icon: '⚡', title: 'Lightning Trail', desc: 'Leaves lightning trail on dash.', cost: 120, unlocked: player.unlockedDashVfx, action: () => unlockSkill('dash', 120) },
             { id: 'fire', icon: '🔥', title: 'Fiery Slash', desc: 'Buffs attacks with 25% fire dmg.', cost: 180, unlocked: player.unlockedFireClaw, action: () => unlockSkill('fire', 180) }
@@ -708,6 +805,8 @@
     function openShopAfterBonus() {
         saveGame();
         document.getElementById('bonus-notice').classList.add('hidden');
+        document.getElementById('ui-overlay').classList.add('hidden');
+        document.getElementById('ui-overlay').classList.remove('bonus-mode');
         document.getElementById('shop-menu').classList.remove('hidden');
         document.getElementById('bonus-result-score').innerText = `Bonus Catch: ${bonusCaught} Salmon (+${bonusCaught * 10} Coins)`;
         document.getElementById('shop-coins').innerText = `Total Whisker Coins: 🪙 ${player.coins}`;
@@ -761,22 +860,28 @@
         document.getElementById('bonus-notice').classList.add('hidden');
         document.getElementById('main-menu').classList.remove('hidden');
         document.getElementById('ui-overlay').classList.add('hidden');
+        document.getElementById('ui-overlay').classList.remove('bonus-mode');
         gameState = 'MENU'; updateBGMState();
     }
 
-    // --- ATTACKS & SKILLS ---
+    // --- ATTACKS & SKILLS (BALANCED MP, HIGH DAMAGE & CUSTOM SFX) ---
     function executeBasicAttack() {
         if (player.isAttacking) return;
-        sfxAttack(); player.isAttacking = true; player.attackType = 'basic';
+        sfxStrike(); player.isAttacking = true; player.attackType = 'basic';
         player.attackTimer = 10; player.attackStep = (player.attackStep % 3) + 1;
-        let baseDmg = player.atk * (player.attackStep === 3 ? 1.4 : 1.0);
+        let baseDmg = player.atk * (player.attackStep === 3 ? 1.5 : 1.0);
         if (player.unlockedFireClaw) baseDmg *= 1.25;
         checkHitTargets(75, baseDmg);
     }
 
     function executeHeavyAttack() {
         if (player.isAttacking) return;
-        sfxAttack(); triggerShake(8);
+        const mpCost = ALL_SKILLS.slam.mp;
+        if (player.slamCd > 0 || player.mp < mpCost) { sfxNoMp(); return; }
+
+        player.mp -= mpCost;
+        player.slamCd = ALL_SKILLS.slam.cd; // 1.5s CD
+        sfxSlam(); triggerShake(8);
         player.isAttacking = true; player.attackType = 'heavy'; player.attackTimer = 18;
         let slamX = worldOffset + player.x + (player.facingRight ? 50 : -30);
         visualEffects.push({ type: 'ground_slam', x: slamX, y: 380, timer: 14, maxTimer: 14 });
@@ -784,35 +889,74 @@
     }
 
     function executeSkill1() {
-        if (player.skill1Cd > 0 || player.mp < 10) return;
-        sfxAttack(); player.mp -= 10; player.skill1Cd = 60;
+        const mpCost = ALL_SKILLS.shuriken.mp;
+        if (player.shurikenCd > 0 || player.mp < mpCost) { sfxNoMp(); return; }
+
+        player.mp -= mpCost;
+        player.shurikenCd = ALL_SKILLS.shuriken.cd; // 2.5s CD
+        sfxShuriken();
         projectiles.push({
             x: worldOffset + player.x + (player.facingRight ? 40 : -20),
-            y: player.y + 30, vx: player.facingRight ? 8 : -8,
-            rotation: 0, type: 'yarn_shuriken', dmg: player.atk * 2.4
+            y: player.y + 30, vx: player.facingRight ? 9 : -9,
+            rotation: 0, type: 'yarn_shuriken', dmg: player.atk * 3.5
         });
     }
 
+    // ENHANCED EXPANDING SONIC SHOCKWAVE SKILL
     function executeSkill2() {
-        if (player.skill2Cd > 0 || player.mp < 20) return;
-        sfxAttack(); triggerShake(12); player.mp -= 20; player.skill2Cd = 120;
-        let pWorldX = worldOffset + player.x;
-        visualEffects.push({ type: 'bell_shockwave', x: pWorldX, y: player.y + 35, radius: 15, maxRadius: 130, alpha: 0.9 });
-        enemies.forEach(en => { if (Math.abs(en.x - pWorldX) < 140) applyDamageToEnemy(en, player.atk * 3.0); });
-        if (boss && bossFightActive && Math.abs(boss.x - pWorldX) < 150) applyDamageToBoss(player.atk * 3.0);
+        const mpCost = ALL_SKILLS.shockwave.mp;
+        if (player.shockwaveCd > 0 || player.mp < mpCost) { sfxNoMp(); return; }
+
+        player.mp -= mpCost;
+        player.shockwaveCd = ALL_SKILLS.shockwave.cd; // 4.0s CD
+        sfxSonicShockwave(); triggerShake(12);
+        
+        let pWorldX = worldOffset + player.x + 35;
+        let pWorldY = player.y + 35;
+
+        // Push Expanding Multi-Ring Sonic Shockwave Visual Effect
+        visualEffects.push({
+            type: 'expanding_sonic_shockwave',
+            x: pWorldX, y: pWorldY,
+            radius: 10, maxRadius: 160,
+            alpha: 1.0, timer: 30, maxTimer: 30,
+            particles: Array.from({length: 16}, () => ({
+                angle: Math.random() * Math.PI * 2,
+                dist: Math.random() * 20,
+                speed: Math.random() * 4 + 3
+            }))
+        });
+
+        enemies.forEach(en => {
+            if (Math.abs((en.x + en.width/2) - pWorldX) < 170) {
+                applyDamageToEnemy(en, player.atk * 5.0);
+            }
+        });
+        if (boss && bossFightActive && Math.abs((boss.x + boss.width/2) - pWorldX) < 180) {
+            applyDamageToBoss(player.atk * 5.0);
+        }
     }
 
     function executeSummonHelper() {
-        if (player.helperCd > 0 || player.mp < 20) return;
-        player.mp -= 20; player.helperCd = 900; player.helperTimer = 900; sfxCoin();
+        const mpCost = ALL_SKILLS.helper.mp;
+        if (player.helperCd > 0 || player.mp < mpCost) { sfxNoMp(); return; }
+
+        player.mp -= mpCost;
+        player.helperCd = ALL_SKILLS.helper.cd; // 15s CD
+        player.helperTimer = 720; // Active for 12s
+        sfxHelperSummon();
     }
 
     function executeUltimate() {
-        if (player.ultCd > 0 || player.mp < 30) return;
-        player.mp -= 30; player.ultCd = 360; triggerShake(25); sfxBossHit();
+        const mpCost = ALL_SKILLS.ult.mp;
+        if (player.ultCd > 0 || player.mp < mpCost) { sfxNoMp(); return; }
+
+        player.mp -= mpCost;
+        player.ultCd = ALL_SKILLS.ult.cd; // 12s CD
+        triggerShake(25); sfxUltimateTempest();
         visualEffects.push({ type: 'paw_tempest', x: worldOffset + 450, y: 250, timer: 45, maxTimer: 45 });
-        enemies.forEach(en => { if (en.x > worldOffset && en.x < worldOffset + 900) applyDamageToEnemy(en, player.atk * 5.0); });
-        if (boss && bossFightActive) applyDamageToBoss(player.atk * 5.0);
+        enemies.forEach(en => { if (en.x > worldOffset && en.x < worldOffset + 900) applyDamageToEnemy(en, player.atk * 8.0); });
+        if (boss && bossFightActive) applyDamageToBoss(player.atk * 8.0);
     }
 
     function checkHitTargets(range, baseDmg) {
@@ -873,11 +1017,12 @@
         if (gameState !== 'PLAYING' && gameState !== 'BOSS') return;
         frameCount++;
 
-        if (frameCount % 12 === 0 && player.mp < player.maxMp) player.mp = Math.min(player.maxMp, player.mp + 1);
+        if (frameCount % 30 === 0 && player.mp < player.maxMp) player.mp = Math.min(player.maxMp, player.mp + 1);
 
         if (player.dashCooldown > 0) player.dashCooldown--;
-        if (player.skill1Cd > 0) player.skill1Cd--;
-        if (player.skill2Cd > 0) player.skill2Cd--;
+        if (player.slamCd > 0) player.slamCd--;
+        if (player.shurikenCd > 0) player.shurikenCd--;
+        if (player.shockwaveCd > 0) player.shockwaveCd--;
         if (player.helperCd > 0) player.helperCd--;
         if (player.ultCd > 0) player.ultCd--;
         if (player.iFrameTimer > 0) player.iFrameTimer--;
@@ -888,11 +1033,11 @@
             helperKitten.x = player.x + Math.cos(helperKitten.targetAngle) * 50;
             helperKitten.y = player.y - 20 + Math.sin(helperKitten.targetAngle) * 15;
 
-            if (frameCount % 60 === 0) {
+            if (frameCount % 50 === 0) {
                 projectiles.push({
                     x: worldOffset + helperKitten.x, y: helperKitten.y,
-                    vx: player.facingRight ? 7 : -7, rotation: 0,
-                    type: 'helper_bullet', dmg: player.atk * 1.2
+                    vx: player.facingRight ? 8 : -8, rotation: 0,
+                    type: 'helper_bullet', dmg: player.atk * 1.4
                 });
             }
         }
@@ -982,14 +1127,19 @@
         });
         bossProjectiles = bossProjectiles.filter(bp => !bp.dead);
 
+        // Update Visual Effects Dynamics
         visualEffects.forEach(fx => {
-            if (fx.type === 'bell_shockwave') {
-                fx.radius += 6; fx.alpha -= 0.04; if (fx.alpha <= 0) fx.dead = true;
+            if (fx.type === 'expanding_sonic_shockwave') {
+                fx.radius += (fx.maxRadius - fx.radius) * 0.12;
+                fx.alpha -= 0.035;
+                fx.timer--;
+                fx.particles.forEach(p => p.dist += p.speed);
+                if (fx.alpha <= 0 || fx.timer <= 0) fx.dead = true;
             } else if (fx.type === 'ground_slam' || fx.type === 'paw_tempest') {
                 fx.timer--; if (fx.timer <= 0) fx.dead = true;
             }
         });
-        visualEffects.filter(fx => !fx.dead);
+        visualEffects = visualEffects.filter(fx => !fx.dead);
 
         damagePopups.forEach(pop => { pop.timer--; pop.y -= 0.8; });
         damagePopups = damagePopups.filter(pop => pop.timer > 0);
@@ -1031,7 +1181,8 @@
 
     function startBonusStageLoop() {
         document.getElementById('bonus-notice').classList.add('hidden');
-        document.getElementById('ui-overlay').classList.add('hidden');
+        document.getElementById('ui-overlay').classList.remove('hidden');
+        document.getElementById('ui-overlay').classList.add('bonus-mode');
         gameState = 'BONUS_STAGE';
         bonusTimer = 1800; bonusCaught = 0; bonusFishList = [];
         player.x = 415; player.y = 310; player.vx = 0; player.vy = 0;
@@ -1142,7 +1293,11 @@
                         for (let i = 0; i < 4; i++) bossProjectiles.push({ x: this.x - (i * 30), y: 150 + (i * 20), vx: -8, vy: 2, dmg: 26 });
                         break;
                     case 6:
-                        visualEffects.push({ type: 'bell_shockwave', x: pWorldX, y: player.y, radius: 20, maxRadius: 100, alpha: 1.0 });
+                        visualEffects.push({
+                            type: 'expanding_sonic_shockwave', x: pWorldX, y: player.y,
+                            radius: 10, maxRadius: 140, alpha: 1.0, timer: 25, maxTimer: 25,
+                            particles: []
+                        });
                         if (Math.abs(player.x - (this.x - worldOffset)) < 300) handlePlayerHit(35);
                         break;
                     case 7:
@@ -1275,15 +1430,39 @@
             ctx.fillStyle = `rgba(56, 189, 248, ${p.alpha})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
         });
 
+        // RENDER EXPANDING SONIC SHOCKWAVE VISUAL EFFECT
         visualEffects.forEach(fx => {
-            if (fx.type === 'ground_slam') {
+            if (fx.type === 'expanding_sonic_shockwave') {
+                let fxScreenX = fx.x - worldOffset;
+                ctx.save();
+                
+                // Concentric Expanding Sonic Wave Rings
+                [1.0, 0.72, 0.45].forEach((scaleRatio, idx) => {
+                    let currentR = fx.radius * scaleRatio;
+                    ctx.beginPath();
+                    ctx.arc(fxScreenX, fx.y, currentR, 0, Math.PI * 2);
+                    ctx.strokeStyle = idx === 0 ? `rgba(0, 240, 255, ${fx.alpha})` : `rgba(255, 209, 102, ${fx.alpha * 0.8})`;
+                    ctx.lineWidth = 4 - idx;
+                    ctx.shadowColor = '#00f0ff';
+                    ctx.shadowBlur = 10;
+                    ctx.stroke();
+                });
+
+                // Sparkles dispersing outward along the soundwave
+                fx.particles.forEach(p => {
+                    let px = fxScreenX + Math.cos(p.angle) * p.dist;
+                    let py = fx.y + Math.sin(p.angle) * p.dist;
+                    ctx.fillStyle = `rgba(255, 255, 255, ${fx.alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                ctx.restore();
+            } else if (fx.type === 'ground_slam') {
                 let fxScreenX = fx.x - worldOffset;
                 ctx.fillStyle = 'rgba(255, 77, 109, 0.6)';
                 ctx.beginPath(); ctx.ellipse(fxScreenX, fx.y, 35 * (1 - fx.timer/fx.maxTimer), 10, 0, 0, Math.PI * 2); ctx.fill();
-            } else if (fx.type === 'bell_shockwave') {
-                let fxScreenX = fx.x - worldOffset;
-                ctx.save(); ctx.strokeStyle = `rgba(255, 209, 102, ${fx.alpha})`; ctx.lineWidth = 3;
-                ctx.beginPath(); ctx.arc(fxScreenX, fx.y, fx.radius, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
             } else if (fx.type === 'paw_tempest') {
                 ctx.save(); ctx.fillStyle = `rgba(255, 209, 102, ${fx.timer/fx.maxTimer})`;
                 ctx.beginPath(); ctx.arc(canvas.width / 2, canvas.height / 2, 250 * (1 - fx.timer/fx.maxTimer), 0, Math.PI*2); ctx.fill(); ctx.restore();
