@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ninja Cat: The Whiskered Realm (Lively Monsters & Massive Boss Edition)</title>
+    <title>Ninja Cat: The Whiskered Realm (Smooth Floating & Rocking Edition)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -1344,7 +1344,6 @@
 
         enemies.forEach(en => {
             if (en.hitReact > 0) { en.hitReact--; en.x += en.vx; } else { en.x -= en.speed; }
-            if (en.type === 'typeB') en.y = 310 + Math.sin(frameCount / 10) * 10;
             let enScreenX = en.x - worldOffset;
             if (Math.abs(player.x - enScreenX) < 35 && Math.abs(player.y - en.y) < 30 && player.iFrameTimer === 0) handlePlayerHit(12 + (currentStage * 2));
         });
@@ -1643,8 +1642,7 @@
         ctx.save();
         if (boss.hitReact > 0) ctx.filter = 'brightness(200%)';
         
-        // Massive breathing scale pulse for boss prominence
-        let breathScale = 1.0 + Math.sin(frameCount / 12) * 0.03;
+        let breathScale = 1.0 + Math.sin(frameCount / 40) * 0.02;
         ctx.translate(bScreenX + boss.width / 2, bossY + boss.height / 2);
         ctx.scale(breathScale, breathScale);
         ctx.translate(-(bScreenX + boss.width / 2), -(bossY + boss.height / 2));
@@ -1657,9 +1655,8 @@
             ctx.beginPath(); ctx.roundRect(bScreenX + 15, bossY + 20, boss.width - 30, boss.height - 30, 20); ctx.fill();
         }
         
-        // Red blinking flash directly on the massive boss sprite
         if (boss.telegraphTimer > 0) {
-            let isBlinkOn = Math.floor(boss.telegraphTimer / 3) % 2 === 0;
+            let isBlinkOn = Math.floor(boss.telegraphTimer / 5) % 2 === 0;
             if (isBlinkOn) {
                 ctx.save();
                 ctx.globalCompositeOperation = 'source-atop';
@@ -1762,17 +1759,25 @@
             else { ctx.fillStyle = '#ffb703'; ctx.beginPath(); ctx.arc(helperKitten.x, helperKitten.y, 14, 0, Math.PI * 2); ctx.fill(); }
         }
 
-        // Render lively monsters with dynamic bouncing, swaying & tilting
+        // Render monsters with distinct Slow Motion styles: Floating Bubble/Cloud vs Rocking Horse
         enemies.forEach(en => {
             let screenX = en.x - worldOffset;
             ctx.save();
             if (en.hitReact > 0) ctx.filter = 'brightness(200%)';
 
-            let bounceY = (en.type === 'typeA') ? -Math.abs(Math.sin(frameCount / 6 + en.x)) * 12 : Math.sin(frameCount / 8 + en.x) * 6;
-            let tiltAngle = Math.sin(frameCount / 10 + en.x) * 0.12;
+            let visualOffsetY = 0;
+            let visualTilt = 0;
 
-            ctx.translate(screenX + en.width / 2, en.y + en.height / 2 + bounceY);
-            ctx.rotate(tiltAngle);
+            if (en.type === 'typeA') {
+                // Style 1: Floating up and down slowly like a bubble or cloud (Smooth Sine Wave)
+                visualOffsetY = Math.sin(frameCount / 50 + en.x * 0.05) * 8;
+            } else {
+                // Style 2: Rocking horse slow-motion back and forth (Gentle Rocking Tilt)
+                visualTilt = Math.sin(frameCount / 70 + en.x * 0.05) * 0.08;
+            }
+
+            ctx.translate(screenX + en.width / 2, (en.y + en.height / 2) + visualOffsetY);
+            ctx.rotate(visualTilt);
 
             let stageEnImgs = enemyImgs[currentStage];
             let monsterImg = (en.type === 'typeA') ? stageEnImgs.typeA : stageEnImgs.typeB;
@@ -1785,7 +1790,7 @@
             }
             ctx.restore();
 
-            // HP bar above monster
+            // HP bar positioned cleanly above monster
             ctx.fillStyle = '#ff4d6d'; ctx.fillRect(screenX, en.y - 12, en.width, 4);
             ctx.fillStyle = '#4ade80'; ctx.fillRect(screenX, en.y - 12, en.width * (en.hp / en.maxHp), 4);
         });
