@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ninja Cat: The Whiskered Realm (Stage Monster Sprites Edition)</title>
+    <title>Ninja Cat: The Whiskered Realm (Ultimate Pro Edition)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -215,6 +215,13 @@
 </head>
 <body>
 
+<!-- Orientation Warning Overlay for Mobile -->
+<div id="orientation-warning" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#1a162b; z-index:999; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px;">
+    <div style="font-size:48px; margin-bottom:12px; animation: pawPulse 2s infinite;">📱🔄</div>
+    <h2 style="color:#ffd166; margin-bottom:8px;">Please Rotate Your Device</h2>
+    <p style="color:#bfaed6; font-size:14px; max-width: 300px; line-height: 1.4;">This game is best played in landscape mode. Please rotate your phone sideways!</p>
+</div>
+
 <div id="game-container">
     <canvas id="gameCanvas" width="900" height="500"></canvas>
     
@@ -249,6 +256,7 @@
                     </div>
                     <span id="hud-coins" style="color: #ffd166;">🪙 0</span>
                     <button id="bgm-toggle-btn" class="menu-btn" style="padding: 2px 6px; font-size: 10px; margin: 0;" onclick="toggleBGM()">🔊 BGM ON</button>
+                    <button id="pause-btn" class="menu-btn" style="background:#e76f51; padding: 2px 8px; font-size: 10px; margin: 0; pointer-events: auto;" onclick="togglePause()">⏸️ PAUSE</button>
                 </div>
                 <div class="hud-panel" id="hud-stage" style="font-size: 10px; color: #bfaed6;">Stage 1: Cozy Cat Village</div>
             </div>
@@ -327,8 +335,10 @@
         <h1 class="game-title">NINJA CAT</h1>
         <p class="game-subtitle">The 9-Lives Whiskered Realm Adventure</p>
         
+        <p id="best-stage-display" style="color: #ffd166; font-size: 13px; font-weight: bold; margin: 2px 0 8px 0;">🏆 Best Stage Reached: Stage 1</p>
+
         <!-- Platform Selection UI -->
-        <div style="margin: 6px 0 10px 0; display: flex; gap: 8px; justify-content: center; pointer-events: auto;">
+        <div style="margin: 4px 0 10px 0; display: flex; gap: 8px; justify-content: center; pointer-events: auto;">
             <button id="platform-mobile-btn" class="menu-btn" style="background: #4a3b6c; border: 2px solid #ffd166; font-size:11px;" onclick="setPlatform('mobile')">📱 Mobile (Touch UI)</button>
             <button id="platform-pc-btn" class="menu-btn" style="background: #342850; border: 2px solid #7c64a3; font-size:11px;" onclick="setPlatform('pc')">🖥️ PC (Keyboard & UI Bar)</button>
         </div>
@@ -337,8 +347,16 @@
         <button class="menu-btn" style="background:#5a467e; padding: 10px 24px; font-size:14px;" onclick="resetSaveData()">RESET SAVE DATA</button>
         
         <div id="menu-controls-info" class="controls-info">
-            📱 <strong>Mobile Mode:</strong> On-screen touch buttons enabled for movement, jump, dash, and skills [Z][X][C][V][B].
+            📱 <strong>Mobile Mode:</strong> On-screen touch buttons enabled for movement, jump, dash, and skills [Z][X][C][V][B]. Press [P] or Pause to pause.
         </div>
+    </div>
+
+    <!-- Pause Menu Screen -->
+    <div id="pause-menu" class="screen-overlay hidden" style="justify-content: center;">
+        <h2 style="color: #ffd166; font-size: 32px; margin: 0;">GAME PAUSED</h2>
+        <p style="color: #bfaed6; margin: 8px 0 16px 0;">Take a breather...</p>
+        <button class="menu-btn" style="padding: 10px 24px; font-size:14px;" onclick="togglePause()">RESUME GAME</button>
+        <button class="menu-btn" style="background:#5a467e; padding: 10px 24px; font-size:14px;" onclick="returnToMenu()">MAIN MENU</button>
     </div>
 
     <!-- Bonus Stage Notice -->
@@ -385,7 +403,6 @@
     const salmonImg = new Image(); salmonImg.src = 'salmon.png';
     const helperImg = new Image(); helperImg.src = 'summon-kitten-helper.png';
 
-    // Stage Monster Images Mapping
     const enemyImgs = {
         1: { typeA: new Image(), typeB: new Image() },
         2: { typeA: new Image(), typeB: new Image() },
@@ -397,28 +414,20 @@
         8: { typeA: new Image(), typeB: new Image() }
     };
     
-    // Stage 1
     enemyImgs[1].typeA.src = 'stage1-yarn-puff.png';
     enemyImgs[1].typeB.src = 'stage1-sleepy-cat-slime.png';
-    // Stage 2
     enemyImgs[2].typeA.src = 'stage2-flying-sardine.png';
     enemyImgs[2].typeB.src = 'stage2-bucket-crab.png';
-    // Stage 3
     enemyImgs[3].typeA.src = 'stage3-vine-yarn-sprite.png';
     enemyImgs[3].typeB.src = 'stage3-mossy-yarn-mite.png';
-    // Stage 4
     enemyImgs[4].typeA.src = 'stage4-paper-knight.png';
     enemyImgs[4].typeB.src = 'stage4-cardboard-bat.png';
-    // Stage 5
     enemyImgs[5].typeA.src = 'stage5-moon-moth.png';
     enemyImgs[5].typeB.src = 'stage5-chimney-imp.png';
-    // Stage 6
     enemyImgs[6].typeA.src = 'stage6-windup-bunny.png';
     enemyImgs[6].typeB.src = 'stage6-gear-bot.png';
-    // Stage 7
     enemyImgs[7].typeA.src = 'stage7-rainbow-cloudlet.png';
     enemyImgs[7].typeB.src = 'stage7-skyfish.png';
-    // Stage 8
     enemyImgs[8].typeA.src = 'stage8-shadow-paw.png';
     enemyImgs[8].typeB.src = 'stage8-flame-mew.png';
 
@@ -437,8 +446,9 @@
 
     let gameState = 'MENU';
     let currentStage = 1;
+    let bestStage = 1;
     const maxStages = 8;
-    let gamePlatform = 'mobile'; // 'mobile' or 'pc'
+    let gamePlatform = 'mobile';
 
     const stageNames = [
         "Cozy Cat Village", "Fish Market Harbor", "Yarn Forest", "Cardboard Castle",
@@ -633,7 +643,7 @@
     }
 
     function getBGMThemeForState() {
-        if (gameState === 'MENU' || gameState === 'SHOP') return 'MENU';
+        if (gameState === 'MENU' || gameState === 'SHOP' || gameState === 'PAUSE') return 'MENU';
         if (gameState === 'BONUS_STAGE' || gameState === 'BONUS_NOTICE') return 'BONUS';
         if (gameState === 'BOSS') return 'BOSS';
         if (gameState === 'PLAYING') return `STAGE_${currentStage}`;
@@ -666,6 +676,29 @@
         if (btn) btn.innerText = bgmMuted ? '🔇 BGM OFF' : '🔊 BGM ON';
     }
 
+    function togglePause() {
+        if (gameState === 'PLAYING' || gameState === 'BOSS') {
+            gameState = 'PAUSE';
+            document.getElementById('pause-menu').classList.remove('hidden');
+        } else if (gameState === 'PAUSE') {
+            gameState = bossFightActive ? 'BOSS' : 'PLAYING';
+            document.getElementById('pause-menu').classList.add('hidden');
+        }
+        updateBGMState();
+    }
+
+    function checkOrientation() {
+        const warning = document.getElementById('orientation-warning');
+        if (window.innerHeight > window.innerWidth && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) {
+            warning.style.display = 'flex';
+        } else {
+            warning.style.display = 'none';
+        }
+    }
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    window.addEventListener('load', checkOrientation);
+
     function setPlatform(platform) {
         gamePlatform = platform;
         let mobileBtn = document.getElementById('platform-mobile-btn');
@@ -675,20 +708,21 @@
         if (platform === 'mobile') {
             mobileBtn.style.background = '#4a3b6c'; mobileBtn.style.borderColor = '#ffd166';
             pcBtn.style.background = '#342850'; pcBtn.style.borderColor = '#7c64a3';
-            infoEl.innerHTML = '📱 <strong>Mobile Mode:</strong> On-screen touch controls enabled for movement, jump, dash, and skills [Z][X][C][V][B].';
+            infoEl.innerHTML = '📱 <strong>Mobile Mode:</strong> On-screen touch controls enabled for movement, jump, dash, and skills [Z][X][C][V][B]. Press Pause to pause.';
         } else {
             pcBtn.style.background = '#4a3b6c'; pcBtn.style.borderColor = '#ffd166';
             mobileBtn.style.background = '#342850'; mobileBtn.style.borderColor = '#7c64a3';
-            infoEl.innerHTML = '🖥️ <strong>PC Mode:</strong> Bottom-left skill slots [Z][X][C][V][B] enabled. Use Keyboard Arrow keys to move, [Space/Up] to jump, [Double Arrow] to dash.';
+            infoEl.innerHTML = '🖥️ <strong>PC Mode:</strong> Bottom-left skill slots [Z][X][C][V][B] enabled. Press [P] or [ESC] to pause.';
         }
         saveGame();
     }
 
     function saveGame() {
+        bestStage = Math.max(bestStage, currentStage);
         const saveData = {
-            currentStage, coins: player.coins, level: player.level,
+            currentStage, bestStage, coins: player.coins, level: player.level,
             maxHp: player.maxHp, maxMp: player.maxMp, atk: player.atk,
-            speed: player.speed, lives: player.lives,
+            speed: player.speed, lives: Math.min(9, player.lives),
             slots: player.slots,
             unlockedShuriken: player.unlockedShuriken,
             unlockedShockwave: player.unlockedShockwave,
@@ -700,6 +734,7 @@
             costs
         };
         localStorage.setItem('ninjacat_save', JSON.stringify(saveData));
+        updateBestStageDisplay();
     }
 
     function loadGame() {
@@ -708,9 +743,10 @@
             try {
                 const parsed = JSON.parse(data);
                 currentStage = parsed.currentStage || 1;
+                bestStage = parsed.bestStage || currentStage;
                 player.coins = parsed.coins || 0;
                 player.level = parsed.level || 1;
-                player.lives = parsed.lives || 9;
+                player.lives = Math.min(9, parsed.lives || 9);
                 player.maxHp = parsed.maxHp || 100; player.hp = player.maxHp;
                 player.maxMp = parsed.maxMp || 50; player.mp = player.maxMp;
                 player.atk = parsed.atk || 15;
@@ -729,6 +765,12 @@
                 if (parsed.costs) costs = parsed.costs;
             } catch(e){}
         }
+        updateBestStageDisplay();
+    }
+
+    function updateBestStageDisplay() {
+        const el = document.getElementById('best-stage-display');
+        if (el) el.innerText = `🏆 Best Stage Reached: Stage ${bestStage} (${stageNames[bestStage-1] || ''})`;
     }
 
     function resetSaveData() {
@@ -739,7 +781,7 @@
 
     const keys = {
         ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false,
-        Space: false, KeyZ: false, KeyX: false, KeyC: false, KeyV: false, KeyB: false
+        Space: false, KeyZ: false, KeyX: false, KeyC: false, KeyV: false, KeyB: false, KeyP: false
     };
 
     let lastKeyTime = { Left: 0, Right: 0 };
@@ -759,6 +801,14 @@
     window.addEventListener('keydown', (e) => {
         initAudio();
         if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
+        
+        if (e.code === 'KeyP' || e.code === 'Escape') {
+            if (gameState === 'PLAYING' || gameState === 'BOSS' || gameState === 'PAUSE') {
+                togglePause();
+            }
+            return;
+        }
+
         if (keys.hasOwnProperty(e.code)) {
             let now = Date.now();
             if (e.code === 'ArrowLeft') {
@@ -839,12 +889,23 @@
     }
 
     function initStage() {
-        worldOffset = 0; stageLength = 3000 + (currentStage * 500);
+        worldOffset = 0; stageLength = 3000 + (currentStage * 600);
         bossFightActive = false; boss = null;
         enemies = []; projectiles = []; bossProjectiles = []; bonusFishList = [];
         visualEffects = []; damagePopups = []; stageHazards = []; dashParticles = [];
+        
         player.x = 200; player.y = 310; player.vx = 0; player.vy = 0; player.iFrameTimer = 0;
         player.helperTimer = 0;
+        
+        player.hp = player.maxHp;
+        player.mp = player.maxMp;
+        player.slamCd = 0;
+        player.shurikenCd = 0;
+        player.shockwaveCd = 0;
+        player.helperCd = 0;
+        player.ultCd = 0;
+        player.dashCooldown = 0;
+
         document.getElementById('hud-stage').innerText = `Stage ${currentStage}: ${stageNames[currentStage-1]}`;
         updateBGMState();
         saveGame();
@@ -1029,6 +1090,7 @@
         document.getElementById('game-over').classList.add('hidden');
         document.getElementById('shop-menu').classList.add('hidden');
         document.getElementById('bonus-notice').classList.add('hidden');
+        document.getElementById('pause-menu').classList.add('hidden');
         document.getElementById('main-menu').classList.remove('hidden');
         document.getElementById('ui-overlay').classList.add('hidden');
         document.getElementById('ui-overlay').classList.remove('bonus-mode');
@@ -1168,13 +1230,14 @@
         addDamagePopup(player.x + 35, player.y - 15, `-${damage}`, false, true);
 
         if (player.hp <= 0) {
-            player.lives--;
+            player.lives = Math.max(0, player.lives - 1);
             if (player.lives > 0) { player.hp = player.maxHp; player.mp = player.maxMp; player.iFrameTimer = 120; }
             else { triggerGameOver(); }
         }
     }
 
     function updateGame() {
+        if (gameState === 'PAUSE') return;
         if (gameState === 'BONUS_STAGE') { updateBonusStage(); return; }
         if (gameState !== 'PLAYING' && gameState !== 'BOSS') return;
         frameCount++;
@@ -1267,12 +1330,14 @@
         });
         stageHazards = stageHazards.filter(h => h.x > worldOffset - 100);
 
-        if (!bossFightActive && worldOffset < stageLength - 200 && frameCount % 90 === 0) {
+        if (!bossFightActive && worldOffset < stageLength - 200 && frameCount % Math.max(45, 90 - (currentStage * 5)) === 0) {
             let mType = Math.random() < 0.5 ? 'typeA' : 'typeB';
+            let progressiveHp = 35 + (currentStage * 25);
+            let progressiveSpeed = 1.1 + (currentStage * 0.2);
             enemies.push({
                 x: worldOffset + canvas.width + 50, y: 320, width: 60, height: 50,
-                hp: 40 + (currentStage * 15), maxHp: 40 + (currentStage * 15),
-                speed: 1.2 + (currentStage * 0.1), vx: 0, hitReact: 0,
+                hp: progressiveHp, maxHp: progressiveHp,
+                speed: progressiveSpeed, vx: 0, hitReact: 0,
                 type: mType
             });
         }
@@ -1281,7 +1346,7 @@
             if (en.hitReact > 0) { en.hitReact--; en.x += en.vx; } else { en.x -= en.speed; }
             if (en.type === 'typeB') en.y = 310 + Math.sin(frameCount / 10) * 10;
             let enScreenX = en.x - worldOffset;
-            if (Math.abs(player.x - enScreenX) < 35 && Math.abs(player.y - en.y) < 30 && player.iFrameTimer === 0) handlePlayerHit(15);
+            if (Math.abs(player.x - enScreenX) < 35 && Math.abs(player.y - en.y) < 30 && player.iFrameTimer === 0) handlePlayerHit(12 + (currentStage * 2));
         });
         enemies = enemies.filter(en => !en.dead && en.x > worldOffset - 150);
 
@@ -1335,7 +1400,7 @@
         document.getElementById('exp-fill').style.width = `${Math.min(100, (player.exp / player.nextExp) * 100)}%`;
         document.getElementById('hud-coins').innerText = `🪙 ${player.coins}`;
         
-        let totalPawCapacity = Math.max(9, player.lives);
+        let totalPawCapacity = 9;
         let livesStr = '';
         for (let i = 0; i < totalPawCapacity; i++) {
             livesStr += i < player.lives ? '<span class="pink-paw-icon">🐾</span>' : '<span class="empty-paw-icon">🐾</span>';
@@ -1435,14 +1500,14 @@
     function startBossFight() {
         bossFightActive = true; gameState = 'BOSS';
         updateBGMState();
-        let hpMultiplier = 1500 + (currentStage * 800);
+        let progressiveBossHp = 1000 + (currentStage * 900);
         boss = {
             x: worldOffset + 700, y: 280, width: 100, height: 100,
-            hp: hpMultiplier, maxHp: hpMultiplier,
-            phase: 1, hitReact: 0, attackTimer: 120, telegraphTimer: 0,
+            hp: progressiveBossHp, maxHp: progressiveBossHp,
+            phase: 1, hitReact: 0, attackTimer: Math.max(60, 150 - (currentStage * 12)), telegraphTimer: 0,
             update: function() {
                 let targetX = worldOffset + player.x;
-                let moveSpeed = 1.0 + (this.phase * 0.4);
+                let moveSpeed = 0.9 + (currentStage * 0.15) + (this.phase * 0.3);
                 if (this.x > targetX + 40) this.x -= moveSpeed;
                 if (this.x < targetX - 40) this.x += moveSpeed;
 
@@ -1451,48 +1516,49 @@
 
                 let bossScreenX = this.x - worldOffset;
                 if (Math.abs(player.x - bossScreenX) < 50 && Math.abs(player.y - this.y) < 45 && player.iFrameTimer === 0) {
-                    handlePlayerHit(20 + (this.phase * 5));
+                    handlePlayerHit(18 + (currentStage * 3) + (this.phase * 5));
                 }
 
                 this.attackTimer--;
                 if (this.attackTimer <= 40 && this.attackTimer > 0) this.telegraphTimer = 40;
                 if (this.attackTimer <= 0) {
                     this.executeSignatureAttack();
-                    this.attackTimer = Math.max(90, 180 - (this.phase * 25));
+                    this.attackTimer = Math.max(70, 160 - (currentStage * 10) - (this.phase * 20));
                 }
             },
             executeSignatureAttack: function() {
                 sfxBossHit(); triggerShake(15);
                 let pWorldX = worldOffset + player.x;
+                let dmgScale = 20 + (currentStage * 4);
                 switch(currentStage) {
                     case 1:
                         visualEffects.push({ type: 'ground_slam', x: this.x, y: 380, timer: 30, maxTimer: 30 });
-                        bossProjectiles.push({ x: this.x, y: 350, vx: -6, vy: 0, dmg: 22 });
+                        bossProjectiles.push({ x: this.x, y: 350, vx: -6, vy: 0, dmg: dmgScale });
                         break;
                     case 2:
-                        for (let i = -1; i <= 1; i++) bossProjectiles.push({ x: this.x, y: this.y + 30, vx: -7, vy: i * 2, dmg: 25 });
+                        for (let i = -1; i <= 1; i++) bossProjectiles.push({ x: this.x, y: this.y + 30, vx: -7, vy: i * 2, dmg: dmgScale + 3 });
                         break;
                     case 3:
-                        bossProjectiles.push({ x: this.x, y: 340, vx: -5, vy: 0, dmg: 30 });
+                        bossProjectiles.push({ x: this.x, y: 340, vx: -5, vy: 0, dmg: dmgScale + 5 });
                         break;
                     case 4:
-                        bossProjectiles.push({ x: pWorldX, y: 0, vx: 0, vy: 7, dmg: 32 });
+                        bossProjectiles.push({ x: pWorldX, y: 0, vx: 0, vy: 7, dmg: dmgScale + 8 });
                         break;
                     case 5:
-                        for (let i = 0; i < 4; i++) bossProjectiles.push({ x: this.x - (i * 30), y: 150 + (i * 20), vx: -8, vy: 2, dmg: 26 });
+                        for (let i = 0; i < 4; i++) bossProjectiles.push({ x: this.x - (i * 30), y: 150 + (i * 20), vx: -8, vy: 2, dmg: dmgScale + 6 });
                         break;
                     case 6:
                         visualEffects.push({ type: 'expanding_sonic_shockwave', x: pWorldX, y: player.y, radius: 10, maxRadius: 140, alpha: 1.0, timer: 25, maxTimer: 25, particles: [] });
-                        if (Math.abs(player.x - (this.x - worldOffset)) < 300) handlePlayerHit(35);
+                        if (Math.abs(player.x - (this.x - worldOffset)) < 300) handlePlayerHit(dmgScale + 12);
                         break;
                     case 7:
                         visualEffects.push({ type: 'paw_tempest', x: pWorldX, y: player.y, timer: 20, maxTimer: 20 });
-                        if (Math.abs(player.x - (this.x - worldOffset)) < 120) handlePlayerHit(40);
+                        if (Math.abs(player.x - (this.x - worldOffset)) < 120) handlePlayerHit(dmgScale + 15);
                         break;
                     case 8:
                         this.x = worldOffset + player.x + 30;
                         visualEffects.push({ type: 'ground_slam', x: this.x, y: 380, timer: 35, maxTimer: 35 });
-                        handlePlayerHit(45);
+                        handlePlayerHit(dmgScale + 20);
                         break;
                 }
             }
@@ -1585,12 +1651,14 @@
         }
         
         if (boss.telegraphTimer > 0) {
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.45)';
-            ctx.beginPath();
-            ctx.arc(bScreenX + 50, 375, 45, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#ff4d6d';
+            let blinkAlpha = (Math.floor(boss.telegraphTimer / 3) % 2 === 0) ? 0.75 : 0.25;
+            ctx.fillStyle = `rgba(255, 50, 50, ${blinkAlpha})`;
+            ctx.strokeStyle = '#ff2244';
             ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            ctx.ellipse(canvas.width / 2, 375, 400, 14, 0, 0, Math.PI * 2);
+            ctx.fill();
             ctx.stroke();
         }
         ctx.restore();
