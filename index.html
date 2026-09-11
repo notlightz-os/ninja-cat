@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ninja Cat: The Whiskered Realm (Ultimate Pro Edition)</title>
+    <title>Ninja Cat: The Whiskered Realm (Lively Monsters & Massive Boss Edition)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -347,7 +347,7 @@
         <button class="menu-btn" style="background:#5a467e; padding: 10px 24px; font-size:14px;" onclick="resetSaveData()">RESET SAVE DATA</button>
         
         <div id="menu-controls-info" class="controls-info">
-            📱 <strong>Mobile Mode:</strong> On-screen touch buttons enabled for movement, jump, dash, and skills [Z][X][C][V][B]. Press [P] or Pause to pause.
+            📱 <strong>Mobile Mode:</strong> On-screen touch controls enabled for movement, jump, dash, and skills [Z][X][C][V][B]. Press Pause to pause.
         </div>
     </div>
 
@@ -1211,7 +1211,7 @@
         let finalDmg = Math.floor(isCrit ? dmg * player.critDmg : dmg);
         finalDmg = Math.max(1, Math.floor(finalDmg * 0.8));
         boss.hp -= finalDmg; boss.hitReact = 8;
-        addDamagePopup(boss.x + 30, boss.y - 10, (isCrit ? "CRIT! " : "") + finalDmg, isCrit, false);
+        addDamagePopup(boss.x + 50, boss.y - 10, (isCrit ? "CRIT! " : "") + finalDmg, isCrit, false);
         if (boss.hp <= 0) triggerBossDefeat();
     }
 
@@ -1353,7 +1353,7 @@
         projectiles.forEach(proj => {
             proj.x += proj.vx; proj.rotation += 0.15;
             enemies.forEach(en => { if (Math.abs(proj.x - en.x) < 35) { applyDamageToEnemy(en, proj.dmg); proj.dead = true; } });
-            if (boss && bossFightActive && Math.abs(proj.x - boss.x) < 45) { applyDamageToBoss(proj.dmg); proj.dead = true; }
+            if (boss && bossFightActive && Math.abs(proj.x - boss.x) < 55) { applyDamageToBoss(proj.dmg); proj.dead = true; }
             if (proj.x > worldOffset + canvas.width + 100 || proj.x < worldOffset - 100) proj.dead = true;
         });
         projectiles = projectiles.filter(p => !p.dead);
@@ -1502,7 +1502,7 @@
         updateBGMState();
         let progressiveBossHp = 1000 + (currentStage * 900);
         boss = {
-            x: worldOffset + 700, y: 280, width: 100, height: 100,
+            x: worldOffset + 680, y: 230, width: 150, height: 140,
             hp: progressiveBossHp, maxHp: progressiveBossHp,
             phase: 1, hitReact: 0, attackTimer: Math.max(60, 150 - (currentStage * 12)), telegraphTimer: 0,
             update: function() {
@@ -1515,7 +1515,7 @@
                 if (this.hp < this.maxHp * 0.33 && this.phase === 2) this.phase = 3;
 
                 let bossScreenX = this.x - worldOffset;
-                if (Math.abs(player.x - bossScreenX) < 50 && Math.abs(player.y - this.y) < 45 && player.iFrameTimer === 0) {
+                if (Math.abs(player.x - bossScreenX) < 65 && Math.abs(player.y - this.y) < 60 && player.iFrameTimer === 0) {
                     handlePlayerHit(18 + (currentStage * 3) + (this.phase * 5));
                 }
 
@@ -1532,11 +1532,11 @@
                 let dmgScale = 20 + (currentStage * 4);
                 switch(currentStage) {
                     case 1:
-                        visualEffects.push({ type: 'ground_slam', x: this.x, y: 380, timer: 30, maxTimer: 30 });
+                        visualEffects.push({ type: 'ground_slam', x: this.x + 75, y: 380, timer: 30, maxTimer: 30 });
                         bossProjectiles.push({ x: this.x, y: 350, vx: -6, vy: 0, dmg: dmgScale });
                         break;
                     case 2:
-                        for (let i = -1; i <= 1; i++) bossProjectiles.push({ x: this.x, y: this.y + 30, vx: -7, vy: i * 2, dmg: dmgScale + 3 });
+                        for (let i = -1; i <= 1; i++) bossProjectiles.push({ x: this.x, y: this.y + 50, vx: -7, vy: i * 2, dmg: dmgScale + 3 });
                         break;
                     case 3:
                         bossProjectiles.push({ x: this.x, y: 340, vx: -5, vy: 0, dmg: dmgScale + 5 });
@@ -1557,7 +1557,7 @@
                         break;
                     case 8:
                         this.x = worldOffset + player.x + 30;
-                        visualEffects.push({ type: 'ground_slam', x: this.x, y: 380, timer: 35, maxTimer: 35 });
+                        visualEffects.push({ type: 'ground_slam', x: this.x + 75, y: 380, timer: 35, maxTimer: 35 });
                         handlePlayerHit(dmgScale + 20);
                         break;
                 }
@@ -1642,24 +1642,31 @@
     function drawThemeBoss(bScreenX, bossY, stage, phase) {
         ctx.save();
         if (boss.hitReact > 0) ctx.filter = 'brightness(200%)';
+        
+        // Massive breathing scale pulse for boss prominence
+        let breathScale = 1.0 + Math.sin(frameCount / 12) * 0.03;
+        ctx.translate(bScreenX + boss.width / 2, bossY + boss.height / 2);
+        ctx.scale(breathScale, breathScale);
+        ctx.translate(-(bScreenX + boss.width / 2), -(bossY + boss.height / 2));
+
         let img = bossImgs[stage];
         if (img && img.complete && img.naturalWidth !== 0) {
             ctx.drawImage(img, bScreenX, bossY, boss.width, boss.height);
         } else {
             ctx.fillStyle = phase === 3 ? '#900c3f' : (phase === 2 ? '#c70039' : '#ff8fa3');
-            ctx.beginPath(); ctx.roundRect(bScreenX + 10, bossY + 15, 80, 80, 15); ctx.fill();
+            ctx.beginPath(); ctx.roundRect(bScreenX + 15, bossY + 20, boss.width - 30, boss.height - 30, 20); ctx.fill();
         }
         
+        // Red blinking flash directly on the massive boss sprite
         if (boss.telegraphTimer > 0) {
-            let blinkAlpha = (Math.floor(boss.telegraphTimer / 3) % 2 === 0) ? 0.75 : 0.25;
-            ctx.fillStyle = `rgba(255, 50, 50, ${blinkAlpha})`;
-            ctx.strokeStyle = '#ff2244';
-            ctx.lineWidth = 2;
-            
-            ctx.beginPath();
-            ctx.ellipse(canvas.width / 2, 375, 400, 14, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
+            let isBlinkOn = Math.floor(boss.telegraphTimer / 3) % 2 === 0;
+            if (isBlinkOn) {
+                ctx.save();
+                ctx.globalCompositeOperation = 'source-atop';
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.75)';
+                ctx.fillRect(bScreenX, bossY, boss.width, boss.height);
+                ctx.restore();
+            }
         }
         ctx.restore();
     }
@@ -1755,22 +1762,32 @@
             else { ctx.fillStyle = '#ffb703'; ctx.beginPath(); ctx.arc(helperKitten.x, helperKitten.y, 14, 0, Math.PI * 2); ctx.fill(); }
         }
 
+        // Render lively monsters with dynamic bouncing, swaying & tilting
         enemies.forEach(en => {
             let screenX = en.x - worldOffset;
             ctx.save();
             if (en.hitReact > 0) ctx.filter = 'brightness(200%)';
+
+            let bounceY = (en.type === 'typeA') ? -Math.abs(Math.sin(frameCount / 6 + en.x)) * 12 : Math.sin(frameCount / 8 + en.x) * 6;
+            let tiltAngle = Math.sin(frameCount / 10 + en.x) * 0.12;
+
+            ctx.translate(screenX + en.width / 2, en.y + en.height / 2 + bounceY);
+            ctx.rotate(tiltAngle);
+
             let stageEnImgs = enemyImgs[currentStage];
             let monsterImg = (en.type === 'typeA') ? stageEnImgs.typeA : stageEnImgs.typeB;
 
             if (monsterImg && monsterImg.complete && monsterImg.naturalWidth !== 0) {
-                ctx.drawImage(monsterImg, screenX, en.y, en.width, en.height);
+                ctx.drawImage(monsterImg, -en.width / 2, -en.height / 2, en.width, en.height);
             } else {
                 ctx.fillStyle = en.type === 'typeA' ? '#ff9999' : '#c19a6b';
-                ctx.fillRect(screenX, en.y, en.width, en.height);
+                ctx.fillRect(-en.width / 2, -en.height / 2, en.width, en.height);
             }
             ctx.restore();
-            ctx.fillStyle = '#ff4d6d'; ctx.fillRect(screenX, en.y - 8, en.width, 4);
-            ctx.fillStyle = '#4ade80'; ctx.fillRect(screenX, en.y - 8, en.width * (en.hp / en.maxHp), 4);
+
+            // HP bar above monster
+            ctx.fillStyle = '#ff4d6d'; ctx.fillRect(screenX, en.y - 12, en.width, 4);
+            ctx.fillStyle = '#4ade80'; ctx.fillRect(screenX, en.y - 12, en.width * (en.hp / en.maxHp), 4);
         });
 
         projectiles.forEach(proj => {
@@ -1789,10 +1806,10 @@
         if (bossFightActive && boss) {
             let bossScreenX = boss.x - worldOffset;
             drawThemeBoss(bossScreenX, boss.y, currentStage, boss.phase);
-            ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(canvas.width / 2 - 200, 20, 400, 18);
-            ctx.fillStyle = '#ff4d6d'; ctx.fillRect(canvas.width / 2 - 198, 22, 396 * (boss.hp / boss.maxHp), 14);
-            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
-            ctx.fillText(`STAGE ${currentStage} BOSS - PHASE ${boss.phase}`, canvas.width / 2, 33);
+            ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(canvas.width / 2 - 200, 16, 400, 20);
+            ctx.fillStyle = '#ff4d6d'; ctx.fillRect(canvas.width / 2 - 198, 18, 396 * (boss.hp / boss.maxHp), 16);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(`👑 STAGE ${currentStage} BOSS - PHASE ${boss.phase}`, canvas.width / 2, 31);
         }
 
         damagePopups.forEach(pop => {
