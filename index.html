@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ninja Cat: The Whiskered Realm (Platform Selector & Balanced Economy Edition)</title>
+    <title>Ninja Cat: The Whiskered Realm (PC Skill Hotbar & Balanced Edition)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -126,7 +126,7 @@
         .shop-card-desc { font-size: 9px; color: #c4b5fd; line-height: 1.2; }
         .shop-card-cost { font-size: 10px; color: #4ade80; font-weight: bold; }
 
-        /* ON-SCREEN ERGONOMIC MOBILE TOUCH CONTROLS */
+        /* TOUCH & SKILL HOTBAR CONTROLS */
         #touch-controls {
             position: absolute; bottom: 6px; left: 0; width: 100%; height: 160px;
             pointer-events: none; z-index: 8;
@@ -230,16 +230,16 @@
             </div>
         </div>
 
-        <!-- ON-SCREEN ERGONOMIC MOBILE TOUCH CONTROLS -->
+        <!-- TOUCH CONTROLS & SKILL HOTBAR -->
         <div id="touch-controls">
-            <div class="touch-cluster-left">
+            <div class="touch-cluster-left" id="cluster-left">
                 <div class="touch-btn dpad-btn" id="btn-left">◀</div>
                 <div class="touch-btn dpad-btn" id="btn-right">▶</div>
                 <div class="touch-btn action-btn" id="btn-jump" style="background: rgba(42, 157, 143, 0.75);">JUMP</div>
                 <div class="touch-btn action-btn" id="btn-dash" style="background: rgba(231, 111, 81, 0.75);">DASH</div>
             </div>
             
-            <div class="touch-cluster-right" id="touch-right-skills">
+            <div class="touch-cluster-right" id="cluster-right">
                 <div class="touch-btn skill-icon-btn" id="btn-z">
                     <span class="key-tag">Z</span>
                     <span class="icon-symbol" id="icon-z">🐾</span>
@@ -277,14 +277,14 @@
         <!-- Platform Selection UI -->
         <div style="margin: 6px 0 10px 0; display: flex; gap: 8px; justify-content: center; pointer-events: auto;">
             <button id="platform-mobile-btn" class="menu-btn" style="background: #4a3b6c; border: 2px solid #ffd166; font-size:11px;" onclick="setPlatform('mobile')">📱 Mobile (Touch UI)</button>
-            <button id="platform-pc-btn" class="menu-btn" style="background: #342850; border: 2px solid #7c64a3; font-size:11px;" onclick="setPlatform('pc')">🖥️ PC (Keyboard)</button>
+            <button id="platform-pc-btn" class="menu-btn" style="background: #342850; border: 2px solid #7c64a3; font-size:11px;" onclick="setPlatform('pc')">🖥️ PC (Keyboard & Hotbar)</button>
         </div>
 
         <button class="menu-btn" style="padding: 10px 24px; font-size:14px;" onclick="startGame()">PLAY GAME</button>
         <button class="menu-btn" style="background:#5a467e; padding: 10px 24px; font-size:14px;" onclick="resetSaveData()">RESET SAVE DATA</button>
         
         <div id="menu-controls-info" class="controls-info">
-            📱 <strong>Mobile Mode:</strong> Use on-screen touch buttons for movement, jump, dash, and skills [Z][X][C][V][B].
+            📱 <strong>Mobile Mode:</strong> On-screen touch buttons enabled for movement, jump, dash, and skills [Z][X][C][V][B].
         </div>
     </div>
 
@@ -590,7 +590,7 @@
         } else {
             pcBtn.style.background = '#4a3b6c'; pcBtn.style.borderColor = '#ffd166';
             mobileBtn.style.background = '#342850'; mobileBtn.style.borderColor = '#7c64a3';
-            infoEl.innerHTML = '🖥️ <strong>PC Mode:</strong> On-screen touch buttons hidden. Use [Arrow Left/Right] to move, [Space/Up] to jump, [Double Arrow] to dash, and [Z][X][C][V][B] for skills.';
+            infoEl.innerHTML = '🖥️ <strong>PC Mode:</strong> Use keyboard [Arrows] to move/jump, [Double Arrow] to dash, and [Z][X][C][V][B] for skills (Skill hotbar displayed on screen).';
         }
         saveGame();
     }
@@ -736,12 +736,15 @@
         document.getElementById('ui-overlay').classList.remove('hidden');
         document.getElementById('ui-overlay').classList.remove('bonus-mode');
 
-        // Apply Platform UI/UX Control Visibility
-        const touchControlsEl = document.getElementById('touch-controls');
+        const clusterLeft = document.getElementById('cluster-left');
+        const clusterRight = document.getElementById('cluster-right');
+        
         if (gamePlatform === 'pc') {
-            touchControlsEl.classList.add('hidden');
+            clusterLeft.style.display = 'none';   // Hide D-Pad movement on PC
+            clusterRight.style.display = 'block'; // Show Skill Hotbar on PC
         } else {
-            touchControlsEl.classList.remove('hidden');
+            clusterLeft.style.display = 'flex';
+            clusterRight.style.display = 'block';
         }
 
         initStage(); gameState = 'PLAYING'; updateBGMState();
@@ -810,7 +813,6 @@
         const grid = document.getElementById('shop-grid-container');
         grid.innerHTML = '';
 
-        // BALANCED SKILL ECONOMY: High damage & high utility skills cost significantly more.
         const shopItems = [
             { id: 'life1', icon: '🐾', title: 'Extra Paw Life (+1 Life)', desc: 'Fixed price: Restores 1 pink paw life.', cost: 30, action: () => buyLife(1) },
             { id: 'life5', icon: '🐾🐾', title: '5x Paw Lives Bundle (+5 Lives)', desc: 'Bundle value! Get 5 lives for 120 Coins.', cost: 120, action: () => buyLife(5) },
@@ -818,7 +820,6 @@
             { id: 'hp', icon: '💖', title: 'Max HP Upgrade (+25 HP)', desc: 'Expands health bar & refills HP.', cost: costs.hp, action: () => upgradeStat('hp') },
             { id: 'spd', icon: '⚡', title: 'Speed Upgrade (+0.5 SPD)', desc: 'Increases move & dodge speed.', cost: costs.spd, action: () => upgradeStat('spd') },
             
-            // Rebalanced Skill & Passive Prices matching power
             { id: 'shuriken', icon: '🗡️', title: 'Yarn Shuriken (3.5x Dmg)', desc: 'Throws spinning projectile (15 MP).', cost: 130, unlocked: player.unlockedShuriken, action: () => unlockSkill('shuriken', 130) },
             { id: 'dash', icon: '⚡', title: 'Lightning Trail (Passive)', desc: 'Cyan electric sparks & high speed dash.', cost: 220, unlocked: player.unlockedDashVfx, action: () => unlockSkill('dash', 220) },
             { id: 'fire', icon: '🔥', title: 'Fiery Slash (Passive)', desc: 'Flame aura & +25% persistent fire damage.', cost: 320, unlocked: player.unlockedFireClaw, action: () => unlockSkill('fire', 320) },
@@ -876,9 +877,15 @@
         document.getElementById('shop-menu').classList.add('hidden');
         document.getElementById('ui-overlay').classList.remove('hidden');
         
-        const touchControlsEl = document.getElementById('touch-controls');
-        if (gamePlatform === 'pc') touchControlsEl.classList.add('hidden');
-        else touchControlsEl.classList.remove('hidden');
+        const clusterLeft = document.getElementById('cluster-left');
+        const clusterRight = document.getElementById('cluster-right');
+        if (gamePlatform === 'pc') {
+            clusterLeft.style.display = 'none';
+            clusterRight.style.display = 'block';
+        } else {
+            clusterLeft.style.display = 'flex';
+            clusterRight.style.display = 'block';
+        }
 
         initStage(); gameState = 'PLAYING'; updateBGMState();
     }
@@ -1657,7 +1664,6 @@
         requestAnimationFrame(mainLoop);
     }
 
-    // Load initial save data on startup
     loadGame();
     mainLoop();
 </script>
