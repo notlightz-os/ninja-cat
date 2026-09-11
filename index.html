@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ninja Cat: The Whiskered Realm (Vivid Passive Effects Edition)</title>
+    <title>Ninja Cat: The Whiskered Realm (Persistent Stage & Free Basic Skills Edition)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -351,7 +351,7 @@
 
     const ALL_SKILLS = {
         'strike': { name: 'Paw Strike', short: 'Strike', icon: '🐾', mp: 0, cd: 0 },
-        'slam': { name: 'Paw Slam', short: 'Slam', icon: '🔨', mp: 8, cd: 90 },
+        'slam': { name: 'Paw Slam', short: 'Slam', icon: '🔨', mp: 0, cd: 90 }, // Free basic skill (0 MP)
         'shuriken': { name: 'Yarn Shuriken', short: 'Shuriken', icon: '🗡️', mp: 15, cd: 150 },
         'shockwave': { name: 'Sonic Shockwave', short: 'Shockwave', icon: '🔔', mp: 25, cd: 240 },
         'helper': { name: 'Kitten Helper', short: 'Helper', icon: '🐱', mp: 30, cd: 900 },
@@ -717,6 +717,7 @@
         player.helperTimer = 0;
         document.getElementById('hud-stage').innerText = `Stage ${currentStage}: ${stageNames[currentStage-1]}`;
         updateBGMState();
+        saveGame(); // Save current stage progress immediately
     }
 
     function selectSlotForSwap(idx) { selectedSlotForSwap = idx; renderLoadoutUI(); }
@@ -823,14 +824,15 @@
     }
 
     function closeShopAndProceed() {
-        saveGame();
-        document.getElementById('shop-menu').classList.add('hidden');
-        document.getElementById('ui-overlay').classList.remove('hidden');
         currentStage++;
         if (currentStage > maxStages) {
             alert('CONGRATULATIONS! YOU HAVE CONQUERED THE WHISKERED REALM!');
+            currentStage = maxStages; saveGame();
             returnToMenu(); return;
         }
+        saveGame();
+        document.getElementById('shop-menu').classList.add('hidden');
+        document.getElementById('ui-overlay').classList.remove('hidden');
         initStage(); gameState = 'PLAYING'; updateBGMState();
     }
 
@@ -887,9 +889,9 @@
 
     function executeHeavyAttack() {
         if (player.isAttacking) return;
-        const mpCost = ALL_SKILLS.slam.mp;
-        if (player.slamCd > 0 || player.mp < mpCost) { sfxNoMp(); return; }
-        player.mp -= mpCost; player.slamCd = ALL_SKILLS.slam.cd;
+        // Slam is free (0 MP)
+        if (player.slamCd > 0) return;
+        player.slamCd = ALL_SKILLS.slam.cd;
         sfxSlam(); triggerShake(8);
         player.isAttacking = true; player.attackType = 'heavy'; player.attackTimer = 18;
         let slamX = worldOffset + player.x + (player.facingRight ? 50 : -30);
@@ -966,7 +968,6 @@
         let finalDmg = Math.floor(isCrit ? dmg * player.critDmg : dmg);
         en.hp -= finalDmg; en.hitReact = 10; en.vx = player.facingRight ? 5 : -5;
         
-        // Fiery Slash Passive Spark Impact Effect
         if (player.unlockedFireClaw) {
             for(let i=0; i<5; i++) {
                 dashParticles.push({
@@ -1032,7 +1033,6 @@
         if (player.ultCd > 0) player.ultCd--;
         if (player.iFrameTimer > 0) player.iFrameTimer--;
 
-        // PASSIVE SKILL 1: Fiery Slash Embers Floating Around Player
         if (player.unlockedFireClaw && frameCount % 8 === 0) {
             dashParticles.push({
                 x: player.x + Math.random() * player.width,
@@ -1042,7 +1042,6 @@
             });
         }
 
-        // PASSIVE SKILL 2: Lightning Trail Sparks on Dash or Movement
         if (player.unlockedDashVfx && player.dashTimer > 0 && frameCount % 2 === 0) {
             dashParticles.push({
                 x: player.x + (player.facingRight ? 10 : 50),
@@ -1074,9 +1073,7 @@
         }
 
         let moveSpeed = player.speed;
-        if (player.dashTimer > 0) {
-            player.dashTimer--; moveSpeed = 9;
-        }
+        if (player.dashTimer > 0) { player.dashTimer--; moveSpeed = 9; }
 
         if (keys.ArrowLeft) {
             player.facingRight = false;
@@ -1439,7 +1436,6 @@
             ctx.fillStyle = '#f72585'; ctx.beginPath(); ctx.arc(hzScreenX, hz.y, hz.radius, 0, Math.PI * 2); ctx.fill();
         });
 
-        // RENDER PASSIVE SKILL PARTICLES (Embers & Lightning Sparks)
         dashParticles.forEach(p => {
             ctx.save();
             if (p.type === 'ember') {
