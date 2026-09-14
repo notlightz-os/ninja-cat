@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Ninja Cat: The Whiskered Realm (Seamless Mobile Edition)</title>
+    <title>Ninja Cat: The Whiskered Realm (PC HD & Mobile Auto UI)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -72,6 +72,10 @@
         #mp-fill { background: linear-gradient(90deg, #3a86ff, #00b4d8); transition: width 0.15s ease-out; }
         #exp-fill { background: linear-gradient(90deg, #ffb703, #ffd166); transition: width 0.15s ease-out; }
         
+        .hud-coins { font-size: 13px; color: #ffd166; }
+        .hud-btn-small { padding: 4px 8px; font-size: 11px; margin: 0; }
+        .hud-stage-text { font-size: 11px; color: #bfaed6; }
+
         .screen-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(17, 14, 26, 0.96); display: flex; flex-direction: column;
@@ -81,12 +85,15 @@
         }
         h1.game-title { font-size: 42px; color: #ffd166; text-shadow: 0 4px 10px rgba(255, 209, 102, 0.4); margin: 20px 0 2px 0; }
         p.game-subtitle { font-size: 15px; color: #bfaed6; margin-bottom: 16px; }
+        .best-stage-text { color: #ffd166; font-size: 14px; font-weight: bold; margin: 4px 0 12px 0; }
+
         .menu-btn {
             background: #7c64a3; color: white; border: none; padding: 10px 20px; margin: 4px;
             border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer;
             box-shadow: 0 3px 0 #4a3b6c; transition: all 0.1s ease; pointer-events: auto;
         }
         .menu-btn:hover, .menu-btn:active { background: #937abf; transform: translateY(-1px); }
+        .main-play-btn { padding: 12px 32px; font-size: 16px; }
         
         .slot-box {
             background: #251d38; border: 1.5px solid #6b5299; border-radius: 6px;
@@ -137,58 +144,91 @@
             pointer-events: none; z-index: 8;
         }
 
-        .touch-cluster-left {
-            position: absolute; 
-            bottom: max(20px, env(safe-area-inset-bottom)); 
-            left: max(20px, env(safe-area-inset-left));
-            display: flex; gap: 16px; align-items: flex-end; pointer-events: auto;
+        .touch-cluster-left { position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); left: max(20px, env(safe-area-inset-left)); pointer-events: auto; }
+        .dpad-container { position: relative; width: 160px; height: 120px; }
+        .dpad-btn { 
+            position: absolute; width: 56px; height: 56px; 
+            border-radius: 50%; font-size: 24px; font-weight: bold;
+            background: rgba(42, 157, 143, 0.75); border: 2px solid rgba(42, 157, 143, 0.9);
+            display: flex; align-items: center; justify-content: center; color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            transition: transform 0.05s, background 0.05s; overflow: hidden;
         }
+        .dpad-btn:active, .dpad-btn.pressed { background: rgba(30, 115, 105, 0.9); transform: scale(0.92); }
+        .dpad-up { bottom: 65px; left: 52px; } .dpad-left { bottom: 5px; left: 0px; } .dpad-right { bottom: 5px; left: 104px; }
 
-        /* UNIFORM CIRCULAR ROULETTE SKILL CLUSTER (RIGHT SIDE) */
-        .touch-cluster-right {
-            position: absolute; 
-            bottom: max(12px, env(safe-area-inset-bottom)); 
-            right: max(12px, env(safe-area-inset-right));
-            width: 155px; height: 155px; pointer-events: auto;
-        }
-
+        .touch-cluster-right { position: absolute; bottom: max(16px, env(safe-area-inset-bottom)); right: max(20px, env(safe-area-inset-right)); pointer-events: auto; }
+        .paw-container { position: relative; width: 170px; height: 170px; }
         .touch-btn {
-            background: rgba(32, 24, 52, 0.72); border: 2px solid rgba(180, 150, 240, 0.5);
-            color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.6); backdrop-filter: blur(5px);
-            transition: background 0.05s, transform 0.05s; position: relative; overflow: hidden;
+            background: rgba(32, 24, 52, 0.72); border: 2px solid rgba(180, 150, 240, 0.5); color: #fff;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6); backdrop-filter: blur(5px); transition: background 0.05s, transform 0.05s; position: relative; overflow: hidden;
         }
         .touch-btn:active, .touch-btn.pressed { background: rgba(120, 80, 200, 0.9) !important; border-color: #ffd166 !important; transform: scale(0.92); }
+        .paw-toe { position: absolute; width: 44px; height: 44px; border-radius: 50%; }
+        .paw-pad { position: absolute; width: 72px; height: 60px; border-radius: 40% 40% 50% 50% / 50% 50% 40% 40%; bottom: 5px; left: 49px; background: rgba(255, 183, 3, 0.88); border-color: #ffd166; color: #111; }
         
-        .dpad-btn { width: 54px; height: 54px; font-weight: bold; font-size: 18px; }
-        .action-btn { width: 56px; height: 44px; border-radius: 12px; font-size: 11px; font-weight: bold; text-shadow: 0px 1px 3px rgba(0,0,0,0.8); }
+        .toe-x { bottom: 75px; left: 5px; background: rgba(255, 77, 109, 0.82); }
+        .toe-c { bottom: 120px; left: 32px; background: rgba(58, 134, 255, 0.82); }
+        .toe-v { bottom: 120px; left: 94px; background: rgba(114, 9, 183, 0.82); }
+        .toe-b { bottom: 75px; left: 121px; background: rgba(247, 37, 133, 0.82); border-color: #ffd166; }
 
-        .skill-icon-btn { 
-            position: absolute; 
-            width: 44px; height: 44px; 
-            border-radius: 50%; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        .touch-btn .icon-symbol { font-size: 20px; line-height: 1; } .paw-pad .icon-symbol { font-size: 28px; }
+        .touch-btn .key-tag { position: absolute; top: 2px; right: 4px; font-size: 8px; color: rgba(255,255,255,0.85); font-weight: bold; }
+        .touch-btn .cd-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; color: #ffd166; }
+
+        .auto-btn {
+            position: absolute; top: -15px; left: 35px; width: 100px; height: 30px; border-radius: 15px; font-size: 12px; font-weight: bold;
+            background: rgba(20, 15, 30, 0.9); border: 2px solid #7c64a3; color: #e2d9f3; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: all 0.2s;
         }
-        .skill-icon-btn .icon-symbol { font-size: 19px; line-height: 1; }
-        .skill-icon-btn .key-tag { position: absolute; top: 1px; right: 2px; font-size: 7px; color: rgba(255,255,255,0.85); font-weight: bold; }
-        .skill-icon-btn .cd-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #ffd166; }
+        .auto-btn.active { background: #4ade80; border-color: #1b3a2b; color: #111; box-shadow: 0 0 12px rgba(74, 222, 128, 0.8); }
 
-        /* Symmetrical Circular Roulette Wheel Layout */
-        #btn-z { top: 8px; left: 55px; background: rgba(255, 183, 3, 0.88); border-color: #ffd166; color: #111; }
-        #btn-x { top: 40px; left: 110px; background: rgba(255, 77, 109, 0.82); }
-        #btn-c { top: 92px; left: 90px; background: rgba(58, 134, 255, 0.82); }
-        #btn-v { top: 92px; left: 20px; background: rgba(114, 9, 183, 0.82); }
-        #btn-b { top: 40px; left: 0px; background: rgba(247, 37, 133, 0.88); border-color: #ffd166; }
-
-        .controls-info { margin-top: 8px; font-size: 12px; color: #9c8cb8; line-height: 1.5; background: rgba(25, 20, 38, 0.6); padding: 8px 16px; border-radius: 8px; border: 1px dashed #7c64a3; max-width: 500px;}
+        .controls-info { margin-top: 8px; font-size: 12px; color: #9c8cb8; line-height: 1.5; background: rgba(25, 20, 38, 0.6); padding: 8px 16px; border-radius: 8px; border: 1px dashed #7c64a3; max-width: 520px;}
         .hidden { display: none !important; }
-        ::backdrop { background: #000; }
+
+        /* =========================================
+           PC / DESKTOP RESPONSIVE SCALING
+           ========================================= */
+        @media (min-width: 1024px) {
+            .hud-panel { font-size: 18px; padding: 10px 18px; border-radius: 12px; }
+            .pink-paw-icon, .empty-paw-icon { font-size: 24px; }
+            .bar-container { width: 220px; height: 14px; border-radius: 7px; }
+            .bar-label { font-size: 14px; margin-bottom: 2px; }
+            
+            .hud-coins { font-size: 18px !important; }
+            .hud-btn-small { padding: 8px 16px; font-size: 14px; border-radius: 8px; }
+            .hud-stage-text { font-size: 16px !important; }
+
+            h1.game-title { font-size: 64px; margin: 30px 0 10px 0; }
+            p.game-subtitle { font-size: 22px; margin-bottom: 24px; }
+            .best-stage-text { font-size: 18px; }
+            .menu-btn { font-size: 16px; padding: 12px 24px; margin: 6px; }
+            .main-play-btn { font-size: 20px; padding: 16px 42px; }
+            .controls-info { font-size: 15px; max-width: 650px; padding: 12px 24px; margin-top: 16px; }
+
+            #pc-skill-bar { bottom: 40px; left: 40px; gap: 14px; }
+            .pc-skill-slot { width: 65px; height: 65px; border-radius: 12px; border-width: 2px; }
+            .pc-skill-slot .key-tag { font-size: 12px; left: 6px; top: 4px; }
+            .pc-skill-slot .icon-symbol { font-size: 32px; }
+            .pc-skill-slot .cd-overlay { font-size: 16px; border-radius: 10px; }
+
+            .shop-grid { max-width: 1100px; gap: 16px; }
+            .shop-card { width: 300px; padding: 12px 16px; border-radius: 12px; border-width: 2px; gap: 14px; }
+            .shop-card-icon { font-size: 34px; min-width: 48px; height: 48px; border-radius: 8px; }
+            .shop-card-title { font-size: 15px; }
+            .shop-card-desc { font-size: 13px; margin-top: 4px; }
+            .shop-card-cost { font-size: 14px; margin-top: 6px; }
+
+            .slot-box { min-width: 90px; padding: 8px 12px; font-size: 14px; border-radius: 8px; }
+            .slot-box span { font-size: 12px !important; margin-bottom: 4px; }
+            .skill-select-btn { font-size: 14px; padding: 8px 14px; border-radius: 8px; }
+        }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <canvas id="gameCanvas" width="720" height="405"></canvas>
+    <canvas id="gameCanvas"></canvas>
     
     <div id="ui-overlay" class="hidden">
         <div class="hud-row">
@@ -218,11 +258,11 @@
                         <div class="bar-label"><span>EXP</span></div>
                         <div class="bar-container" style="width: 70px;"><div id="exp-fill" class="bar-fill"></div></div>
                     </div>
-                    <span id="hud-coins" style="color: #ffd166; font-size: 13px;">🪙 0</span>
-                    <button id="bgm-toggle-btn" class="menu-btn" style="padding: 4px 8px; font-size: 11px; margin: 0;" onclick="toggleBGM()">🔊 BGM ON</button>
-                    <button id="pause-btn" class="menu-btn" style="background:#e76f51; padding: 4px 10px; font-size: 11px; margin: 0; pointer-events: auto;" onclick="togglePause()">⏸️ PAUSE</button>
+                    <span id="hud-coins" class="hud-coins">🪙 0</span>
+                    <button id="bgm-toggle-btn" class="menu-btn hud-btn-small" onclick="toggleBGM()">🔊 BGM ON</button>
+                    <button id="pause-btn" class="menu-btn hud-btn-small" style="background:#e76f51; pointer-events: auto;" onclick="togglePause()">⏸️ PAUSE</button>
                 </div>
-                <div class="hud-panel" id="hud-stage" style="font-size: 11px; color: #bfaed6;">Stage 1: Cozy Cat Village</div>
+                <div class="hud-panel hud-stage-text" id="hud-stage">Stage 1: Cozy Cat Village</div>
             </div>
         </div>
 
@@ -235,23 +275,26 @@
         </div>
 
         <div id="touch-controls">
+            <!-- D-PAD CLUSTER -->
             <div class="touch-cluster-left">
-                <div style="display:flex; gap: 10px;">
-                    <div class="touch-btn dpad-btn" id="btn-left">◀</div>
-                    <div class="touch-btn dpad-btn" id="btn-right">▶</div>
-                </div>
-                <div style="display:flex; gap: 10px; margin-left: 12px;">
-                    <div class="touch-btn action-btn" id="btn-jump" style="background: rgba(42, 157, 143, 0.8);">JUMP</div>
-                    <div class="touch-btn action-btn" id="btn-dash" style="background: rgba(231, 111, 81, 0.8);">DASH</div>
+                <div class="dpad-container">
+                    <div class="dpad-btn dpad-up" id="btn-up">▲</div>
+                    <div class="dpad-btn dpad-left" id="btn-left">◀</div>
+                    <div class="dpad-btn dpad-right" id="btn-right">▶</div>
                 </div>
             </div>
             
-            <div class="touch-cluster-right" id="touch-right-skills">
-                <div class="touch-btn skill-icon-btn" id="btn-z"><span class="key-tag">Z</span><span class="icon-symbol" id="icon-z">🐾</span><div class="cd-overlay hidden" id="cd-z"></div></div>
-                <div class="touch-btn skill-icon-btn" id="btn-x"><span class="key-tag">X</span><span class="icon-symbol" id="icon-x">🔨</span><div class="cd-overlay hidden" id="cd-x"></div></div>
-                <div class="touch-btn skill-icon-btn" id="btn-c"><span class="key-tag">C</span><span class="icon-symbol" id="icon-c">🧶</span><div class="cd-overlay hidden" id="cd-c"></div></div>
-                <div class="touch-btn skill-icon-btn" id="btn-v"><span class="key-tag">V</span><span class="icon-symbol" id="icon-v">🔊</span><div class="cd-overlay hidden" id="cd-v"></div></div>
-                <div class="touch-btn skill-icon-btn" id="btn-b"><span class="key-tag">B</span><span class="icon-symbol" id="icon-b">🌪️</span><div class="cd-overlay hidden" id="cd-b"></div></div>
+            <!-- CAT PAW CLUSTER -->
+            <div class="touch-cluster-right">
+                <div class="paw-container" id="touch-right-skills">
+                    <div class="auto-btn" id="btn-auto" onclick="toggleAuto()">AUTO: OFF</div>
+                    <div class="touch-btn paw-toe toe-x" id="btn-x"><span class="key-tag">X</span><span class="icon-symbol" id="icon-x">🔨</span><div class="cd-overlay hidden" id="cd-x" style="border-radius:50%;"></div></div>
+                    <div class="touch-btn paw-toe toe-c" id="btn-c"><span class="key-tag">C</span><span class="icon-symbol" id="icon-c">🧶</span><div class="cd-overlay hidden" id="cd-c" style="border-radius:50%;"></div></div>
+                    <div class="touch-btn paw-toe toe-v" id="btn-v"><span class="key-tag">V</span><span class="icon-symbol" id="icon-v">🔊</span><div class="cd-overlay hidden" id="cd-v" style="border-radius:50%;"></div></div>
+                    <div class="touch-btn paw-toe toe-b" id="btn-b"><span class="key-tag">B</span><span class="icon-symbol" id="icon-b">🌪️</span><div class="cd-overlay hidden" id="cd-b" style="border-radius:50%;"></div></div>
+                    
+                    <div class="touch-btn paw-pad" id="btn-z"><span class="key-tag">Z</span><span class="icon-symbol" id="icon-z">🐾</span><div class="cd-overlay hidden" id="cd-z" style="border-radius: 40% 40% 50% 50%;"></div></div>
+                </div>
             </div>
         </div>
     </div>
@@ -261,18 +304,18 @@
         <h1 class="game-title">NINJA CAT</h1>
         <p class="game-subtitle">The 9-Lives Whiskered Realm Adventure</p>
         
-        <p id="best-stage-display" style="color: #ffd166; font-size: 14px; font-weight: bold; margin: 4px 0 12px 0;">🏆 Best Stage Reached: Stage 1</p>
+        <p id="best-stage-display" class="best-stage-text">🏆 Best Stage Reached: Stage 1</p>
 
         <div style="margin: 6px 0 16px 0; display: flex; gap: 10px; justify-content: center; pointer-events: auto;">
-            <button id="platform-mobile-btn" class="menu-btn" style="background: #4a3b6c; border: 2px solid #ffd166;" onclick="setPlatform('mobile')">📱 Mobile (Touch UI)</button>
+            <button id="platform-mobile-btn" class="menu-btn" style="background: #4a3b6c; border: 2px solid #ffd166;" onclick="setPlatform('mobile')">📱 Mobile (D-Pad UI)</button>
             <button id="platform-pc-btn" class="menu-btn" style="background: #342850; border: 2px solid #7c64a3;" onclick="setPlatform('pc')">🖥️ PC (Keyboard UI)</button>
         </div>
 
-        <button class="menu-btn" style="padding: 12px 32px; font-size:16px;" onclick="startGame()">PLAY GAME</button>
-        <button class="menu-btn" style="background:#5a467e; padding: 12px 32px; font-size:14px;" onclick="resetSaveData()">RESET SAVE DATA</button>
+        <button class="menu-btn main-play-btn" onclick="startGame()">PLAY GAME</button>
+        <button class="menu-btn" style="background:#5a467e;" onclick="resetSaveData()">RESET SAVE DATA</button>
         
         <div id="menu-controls-info" class="controls-info">
-            📱 <strong>Mobile Mode:</strong> Click Play to start seamlessly in full screen landscape mode with circular roulette skills.
+            📱 <strong>Mobile Mode:</strong> Auto Landscape. Double-tap any directional arrow to Dash. Auto-Skill button available for easy combat.
         </div>
     </div>
 
@@ -280,7 +323,7 @@
     <div id="pause-menu" class="screen-overlay hidden" style="justify-content: center;">
         <h2 style="color: #ffd166; font-size: 36px; margin: 0;">GAME PAUSED</h2>
         <p style="color: #bfaed6; font-size: 16px; margin: 8px 0 24px 0;">Take a breather...</p>
-        <button class="menu-btn" style="padding: 12px 32px; font-size:15px;" onclick="togglePause()">RESUME GAME</button>
+        <button class="menu-btn main-play-btn" onclick="togglePause()">RESUME GAME</button>
         <button class="menu-btn" style="background:#5a467e; padding: 12px 32px; font-size:15px;" onclick="returnToMenu()">MAIN MENU</button>
     </div>
 
@@ -295,10 +338,10 @@
     <div id="shop-menu" class="screen-overlay hidden">
         <h2 id="bonus-result-title" style="color: #4ade80; margin-top:4px; margin-bottom:4px; font-size:24px;">STAGE CLEARED!</h2>
         <p id="bonus-result-score" style="font-size: 14px; color: #ffd166; margin: 4px;">Bonus Catch: 0 Salmon (+0 Coins)</p>
-        <p id="shop-coins" style="color: #bfaed6; margin: 4px 0 8px 0; font-size: 15px; font-weight: bold;">Total Whisker Coins: 🪙 0</p>
+        <p id="shop-coins" class="best-stage-text" style="color: #bfaed6;">Total Whisker Coins: 🪙 0</p>
 
         <div style="background: rgba(0,0,0,0.5); padding: 8px; border-radius: 8px; width: 100%; max-width: 860px; margin-bottom: 8px; border: 1px solid #7c64a3;">
-            <p style="color: #ffd166; margin: 0 0 6px 0; font-weight: bold; font-size:12px;">
+            <p style="color: #ffd166; margin: 0 0 6px 0; font-weight: bold; font-size:13px;">
                 ⚔️ SKILL SLOTS MANAGEMENT (Tap a slot, then tap a skill to equip/swap):
             </p>
             <div id="loadout-container" style="display: flex; gap: 8px; justify-content: center; margin-bottom: 6px;"></div>
@@ -314,19 +357,37 @@
     <div id="game-over" class="screen-overlay hidden" style="justify-content: center;">
         <h2 style="color: #ff4d6d; font-size: 36px; margin: 0;">ALL LIVES LOST!</h2>
         <p style="color: #bfaed6; font-size: 16px; margin: 8px 0 24px 0;">Your adventure ends here...</p>
-        <button class="menu-btn" style="padding: 12px 32px; font-size:15px;" onclick="returnToMenu()">MAIN MENU</button>
+        <button class="menu-btn main-play-btn" onclick="returnToMenu()">MAIN MENU</button>
     </div>
 </div>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    const LOGICAL_WIDTH = 720;
+    const LOGICAL_HEIGHT = 405;
 
     function resizeCanvas() {
         const dpr = window.devicePixelRatio || 1;
-        canvas.width = 720 * dpr;
-        canvas.height = 405 * dpr;
-        ctx.scale(dpr, dpr);
+        const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
+        
+        // ค้นหาสัดส่วน 16:9 ที่ใหญ่ที่สุดที่แสดงผลได้พอดีหน้าต่าง (เพื่อให้ Scale Pixel คมชัดเป๊ะบนจอคอม PC/4K)
+        let renderW = screenW;
+        let renderH = screenW * (9 / 16);
+        if (renderH > screenH) {
+            renderH = screenH;
+            renderW = screenH * (16 / 9);
+        }
+        
+        // กำหนดความละเอียดจริงของ Canvas ให้คมชัดตามหน้าจอและ Device Pixel Ratio
+        canvas.width = renderW * dpr;
+        canvas.height = renderH * dpr;
+        
+        // สเกล Drawing Context กลับมาให้โค้ดเกมที่ใช้พิกัดแกน 720x405 ทำงานได้ตรงจุดเดิม 100%
+        const scaleX = (renderW * dpr) / LOGICAL_WIDTH;
+        const scaleY = (renderH * dpr) / LOGICAL_HEIGHT;
+        ctx.scale(scaleX, scaleY);
     }
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
@@ -398,7 +459,8 @@
     let visualEffects = []; let damagePopups = []; let stageHazards = []; let dashParticles = [];
     let frameCount = 0; let screenShakeTimer = 0;
 
-    let audioCtx = null; let bgmMuted = false; let currentBGMTheme = null; let bgmStep = 0; let bgmTimer = null;
+    let audioCtx = null; let bgmMuted = false; let currentBGMTheme = null; let bgmStep = 0; let bgmTimer = null; let autoMode = false;
+
     const BGM_THEMES = {
         'MENU': { speed: 450, type: 'sine', notes: [261.63, 329.63, 392.00, 440.00, 392.00, 329.63, 293.66, 261.63] },
         'STAGE_1': { speed: 420, type: 'sine', notes: [261.63, 293.66, 329.63, 392.00, 440.00, 392.00, 329.63, 293.66] },
@@ -466,8 +528,13 @@
         else if (gameState === 'PAUSE') { gameState = bossFightActive ? 'BOSS' : 'PLAYING'; document.getElementById('pause-menu').classList.add('hidden'); }
         updateBGMState();
     }
+    function toggleAuto() {
+        initAudio(); autoMode = !autoMode; const btn = document.getElementById('btn-auto');
+        if (autoMode) { btn.innerText = '⚡ AUTO: ON'; btn.classList.add('active'); } 
+        else { btn.innerText = 'AUTO: OFF'; btn.classList.remove('active'); }
+        sfxCoin();
+    }
 
-    // Seamless Fullscreen & Landscape Activation on Play
     async function activateFullscreenAndLandscape() {
         try {
             let el = document.documentElement;
@@ -483,10 +550,10 @@
         let mobileBtn = document.getElementById('platform-mobile-btn'); let pcBtn = document.getElementById('platform-pc-btn'); let infoEl = document.getElementById('menu-controls-info');
         if (platform === 'mobile') {
             mobileBtn.style.background = '#4a3b6c'; mobileBtn.style.borderColor = '#ffd166'; pcBtn.style.background = '#342850'; pcBtn.style.borderColor = '#7c64a3';
-            infoEl.innerHTML = '📱 <strong>Mobile Mode:</strong> Click Play to start seamlessly in full screen landscape mode with circular roulette skills.';
+            infoEl.innerHTML = '📱 <strong>Mobile Mode:</strong> Auto Landscape. Double-tap any directional arrow to Dash. Auto-Skill button available for easy combat.';
         } else {
             pcBtn.style.background = '#4a3b6c'; pcBtn.style.borderColor = '#ffd166'; mobileBtn.style.background = '#342850'; mobileBtn.style.borderColor = '#7c64a3';
-            infoEl.innerHTML = '🖥️ <strong>PC Mode:</strong> Bottom-left skill slots [Z][X][C][V][B] enabled. Press [P] or [ESC] to pause.';
+            infoEl.innerHTML = '🖥️ <strong>PC Mode:</strong> Bottom-left skill slots [Z][X][C][V][B] enabled. Press [P] or [ESC] to pause. Responsive UI active for HD screens.';
         }
         saveGame();
     }
@@ -512,7 +579,7 @@
     function resetSaveData() { localStorage.removeItem('ninjacat_save'); alert('Save data reset successfully!'); location.reload(); }
 
     const keys = { ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false, Space: false, KeyZ: false, KeyX: false, KeyC: false, KeyV: false, KeyB: false, KeyP: false };
-    let lastKeyTime = { Left: 0, Right: 0 };
+    let lastKeyTime = { Left: 0, Right: 0, Up: 0 };
     function executeSkillByName(skillKey) {
         if (!skillKey) return; if (skillKey === 'strike') executeBasicAttack(); if (skillKey === 'slam') executeHeavyAttack();
         if (skillKey === 'shuriken') executeSkill1(); if (skillKey === 'shockwave') executeSkill2(); if (skillKey === 'helper') executeSummonHelper(); if (skillKey === 'ult') executeUltimate();
@@ -523,11 +590,34 @@
         initAudio(); if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
         if (e.code === 'KeyP' || e.code === 'Escape') { if (gameState === 'PLAYING' || gameState === 'BOSS' || gameState === 'PAUSE') togglePause(); return; }
         if (keys.hasOwnProperty(e.code)) {
-            let now = Date.now(); if (e.code === 'ArrowLeft') { if (now - lastKeyTime.Left < 250) triggerDash(-1); lastKeyTime.Left = now; } if (e.code === 'ArrowRight') { if (now - lastKeyTime.Right < 250) triggerDash(1); lastKeyTime.Right = now; }
+            let now = Date.now(); 
+            if (e.code === 'ArrowLeft') { if (now - lastKeyTime.Left < 250) triggerDash(-1); lastKeyTime.Left = now; } 
+            if (e.code === 'ArrowRight') { if (now - lastKeyTime.Right < 250) triggerDash(1); lastKeyTime.Right = now; }
+            if (e.code === 'ArrowUp') { if (now - lastKeyTime.Up < 250) triggerDash(player.facingRight ? 1 : -1); lastKeyTime.Up = now; }
             keys[e.code] = true; if (slotKeyMap.hasOwnProperty(e.code) && (gameState === 'PLAYING' || gameState === 'BOSS')) executeSkillByName(player.slots[slotKeyMap[e.code]]);
         }
     });
     window.addEventListener('keyup', (e) => { if (keys.hasOwnProperty(e.code)) keys[e.code] = false; });
+
+    let lastTouch = { ArrowLeft: 0, ArrowRight: 0, ArrowUp: 0 };
+    function setupDpadButton(id, dirKey, dashDir) {
+        const el = document.getElementById(id); if (!el) return;
+        const startFn = (e) => {
+            e.preventDefault(); initAudio(); el.classList.add('pressed'); keys[dirKey] = true;
+            let now = Date.now();
+            if (now - lastTouch[dirKey] < 250) {
+                triggerDash(dashDir !== null ? dashDir : (player.facingRight ? 1 : -1));
+            }
+            lastTouch[dirKey] = now;
+        };
+        const endFn = (e) => { e.preventDefault(); el.classList.remove('pressed'); keys[dirKey] = false; };
+        el.addEventListener('touchstart', startFn, { passive: false }); el.addEventListener('touchend', endFn, { passive: false });
+        el.addEventListener('mousedown', startFn); el.addEventListener('mouseup', endFn);
+    }
+    
+    setupDpadButton('btn-left', 'ArrowLeft', -1);
+    setupDpadButton('btn-right', 'ArrowRight', 1);
+    setupDpadButton('btn-up', 'ArrowUp', null);
 
     function setupTouchButton(id, onStart, onEnd) {
         const el = document.getElementById(id); if (!el) return;
@@ -535,7 +625,7 @@
         const endFn = (e) => { e.preventDefault(); el.classList.remove('pressed'); if (onEnd) onEnd(); };
         el.addEventListener('touchstart', startFn, { passive: false }); el.addEventListener('touchend', endFn, { passive: false }); el.addEventListener('mousedown', startFn); el.addEventListener('mouseup', endFn);
     }
-    setupTouchButton('btn-left', () => keys.ArrowLeft = true, () => keys.ArrowLeft = false); setupTouchButton('btn-right', () => keys.ArrowRight = true, () => keys.ArrowRight = false); setupTouchButton('btn-jump', () => keys.Space = true, () => keys.Space = false); setupTouchButton('btn-dash', () => triggerDash(player.facingRight ? 1 : -1));
+    
     setupTouchButton('btn-z', () => executeSkillByName(player.slots[0])); setupTouchButton('btn-x', () => executeSkillByName(player.slots[1])); setupTouchButton('btn-c', () => executeSkillByName(player.slots[2])); setupTouchButton('btn-v', () => executeSkillByName(player.slots[3])); setupTouchButton('btn-b', () => executeSkillByName(player.slots[4]));
 
     function triggerDash(dir) { if (player.dashCooldown <= 0) { player.dashCooldown = 45; player.dashTimer = 12; player.vx = dir * 10; } }
@@ -547,7 +637,7 @@
         loadGame(); document.getElementById('main-menu').classList.add('hidden'); document.getElementById('ui-overlay').classList.remove('hidden'); document.getElementById('ui-overlay').classList.remove('bonus-mode');
         const touchControlsEl = document.getElementById('touch-controls'); const pcSkillBarEl = document.getElementById('pc-skill-bar');
         if (gamePlatform === 'pc') { touchControlsEl.classList.add('hidden'); pcSkillBarEl.classList.remove('hidden'); } else { touchControlsEl.classList.remove('hidden'); pcSkillBarEl.classList.add('hidden'); }
-        initStage(); gameState = 'PLAYING'; updateBGMState();
+        initStage(); gameState = 'PLAYING'; updateBGMState(); resizeCanvas();
     }
 
     function initStage() {
@@ -622,14 +712,7 @@
         if (player.shurikenCd > 0 || player.mp < mpCost) { sfxNoMp(); return; }
         player.mp -= mpCost; player.shurikenCd = ALL_SKILLS.shuriken.cd;
         sfxShuriken();
-        projectiles.push({
-            x: worldOffset + player.x + (player.facingRight ? 40 : -20),
-            y: player.y + 30,
-            vx: player.facingRight ? 10 : -10,
-            rotation: 0,
-            type: 'yarn_shuriken',
-            dmg: player.atk * 3.5
-        });
+        projectiles.push({ x: worldOffset + player.x + (player.facingRight ? 40 : -20), y: player.y + 30, vx: player.facingRight ? 10 : -10, rotation: 0, type: 'yarn_shuriken', dmg: player.atk * 3.5 });
     }
 
     function executeSkill2() {
@@ -638,15 +721,8 @@
         player.mp -= mpCost; player.shockwaveCd = ALL_SKILLS.shockwave.cd;
         sfxSonicShockwave();
         triggerShake(16);
-        let pWorldX = worldOffset + player.x + 35;
-        let pWorldY = player.y + 35;
-        visualEffects.push({
-            type: 'sonic_shockwave_v2',
-            x: pWorldX, y: pWorldY,
-            radius: 15, maxRadius: 210,
-            alpha: 1.0, timer: 35, maxTimer: 35,
-            rings: [0.3, 0.6, 1.0]
-        });
+        let pWorldX = worldOffset + player.x + 35; let pWorldY = player.y + 35;
+        visualEffects.push({ type: 'sonic_shockwave_v2', x: pWorldX, y: pWorldY, radius: 15, maxRadius: 210, alpha: 1.0, timer: 35, maxTimer: 35, rings: [0.3, 0.6, 1.0] });
         enemies.forEach(en => { if (Math.abs((en.x + en.width/2) - pWorldX) < 210) applyDamageToEnemy(en, player.atk * 5.0); });
         if (boss && bossFightActive && Math.abs((boss.x + boss.width/2) - pWorldX) < 220) applyDamageToBoss(player.atk * 5.0);
     }
@@ -679,9 +755,7 @@
     function applyDamageToEnemy(en, dmg) {
         sfxHit(); let isCrit = Math.random() < player.critRate; let finalDmg = Math.floor(isCrit ? dmg * player.critDmg : dmg);
         en.hp -= finalDmg; en.hitReact = 10; en.vx = player.facingRight ? 5 : -5;
-        if (player.unlockedFireClaw) {
-            for(let i=0; i<6; i++) dashParticles.push({ x: en.x + en.width/2, y: en.y + en.height/2, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8, size: Math.random() * 6 + 3, alpha: 1.0, type: 'fire_spark' });
-        }
+        if (player.unlockedFireClaw) { for(let i=0; i<6; i++) dashParticles.push({ x: en.x + en.width/2, y: en.y + en.height/2, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8, size: Math.random() * 6 + 3, alpha: 1.0, type: 'fire_spark' }); }
         addDamagePopup(en.x, en.y - 10, (isCrit ? "CRIT! " : "") + finalDmg, isCrit, false);
         if (en.hp <= 0) { en.dead = true; sfxCoin(); player.exp += 25; player.coins += Math.floor(Math.random() * 5) + 3; checkLevelUp(); }
     }
@@ -713,6 +787,24 @@
         frameCount++; if (frameCount % 30 === 0 && player.mp < player.maxMp) player.mp = Math.min(player.maxMp, player.mp + 1);
         if (player.dashCooldown > 0) player.dashCooldown--; if (player.slamCd > 0) player.slamCd--; if (player.shurikenCd > 0) player.shurikenCd--; if (player.shockwaveCd > 0) player.shockwaveCd--; if (player.helperCd > 0) player.helperCd--; if (player.ultCd > 0) player.ultCd--; if (player.iFrameTimer > 0) player.iFrameTimer--;
         
+        if (autoMode && !player.isAttacking && gameState === 'PLAYING') {
+            for (let i = 4; i >= 1; i--) {
+                let sKey = player.slots[i]; if (!sKey) continue;
+                let skill = ALL_SKILLS[sKey]; let cd = 0;
+                if (sKey === 'slam') cd = player.slamCd; else if (sKey === 'shuriken') cd = player.shurikenCd;
+                else if (sKey === 'shockwave') cd = player.shockwaveCd; else if (sKey === 'helper') cd = player.helperCd;
+                else if (sKey === 'ult') cd = player.ultCd;
+                
+                if (cd <= 0 && player.mp >= skill.mp) { executeSkillByName(sKey); break; }
+            }
+            if (!player.isAttacking) {
+                let pWorldX = worldOffset + player.x; let hitBoxX = player.facingRight ? pWorldX + 15 : pWorldX - 85;
+                let enemyInRange = enemies.some(en => en.x + en.width > hitBoxX && en.x < hitBoxX + 85);
+                if (boss && bossFightActive && boss.x + boss.width > hitBoxX && boss.x < hitBoxX + 85) enemyInRange = true;
+                if (enemyInRange) executeBasicAttack();
+            }
+        }
+
         if (player.unlockedFireClaw && frameCount % 8 === 0) dashParticles.push({ x: player.x + Math.random() * player.width, y: player.y + player.height - (Math.random() * 20), vx: (Math.random() - 0.5) * 1.5, vy: -Math.random() * 2.5 - 1, size: Math.random() * 4 + 2, alpha: 1.0, type: 'ember' });
         if (player.unlockedDashVfx && player.dashTimer > 0 && frameCount % 2 === 0) dashParticles.push({ x: player.x + (player.facingRight ? 10 : 60), y: player.y + 35 + (Math.random() - 0.5) * 20, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, size: Math.random() * 6 + 3, alpha: 1.0, type: 'lightning_spark' });
         dashParticles.forEach(p => { p.x += (p.vx || 0); p.y += (p.vy || 0); p.alpha -= (p.type === 'ember' ? 0.03 : 0.08); }); dashParticles = dashParticles.filter(p => p.alpha > 0);
@@ -766,15 +858,12 @@
 
         visualEffects.forEach(fx => {
             if (fx.type === 'sonic_shockwave_v2') {
-                fx.radius += (fx.maxRadius - fx.radius) * 0.12;
-                fx.alpha -= 0.03;
-                fx.timer--;
+                fx.radius += (fx.maxRadius - fx.radius) * 0.12; fx.alpha -= 0.03; fx.timer--;
                 if (fx.alpha <= 0 || fx.timer <= 0) fx.dead = true;
             } else if (fx.type === 'ground_slam' || fx.type === 'summon_glow') {
                 fx.timer--; if (fx.timer <= 0) fx.dead = true;
             } else if (fx.type === 'paw_tempest_v2') {
-                fx.rotation += 0.15;
-                fx.timer--; if (fx.timer <= 0) fx.dead = true;
+                fx.rotation += 0.15; fx.timer--; if (fx.timer <= 0) fx.dead = true;
             }
         });
         visualEffects = visualEffects.filter(fx => !fx.dead);
@@ -850,31 +939,16 @@
     function drawStageBackground(stage, offset) {
         let bgScroll = (offset * 0.3) % 720;
         switch(stage) {
-            case 1:
-                let vGrad = ctx.createLinearGradient(0, 0, 0, 405); vGrad.addColorStop(0, '#ffd166'); vGrad.addColorStop(1, '#ffb703'); ctx.fillStyle = vGrad; ctx.fillRect(0, 0, 720, 405);
-                ctx.fillStyle = '#8d6e63'; for (let i = -bgScroll; i < 720 + 200; i += 280) { ctx.fillRect(i, 215, 100, 130); ctx.fillStyle = '#d4a373'; ctx.beginPath(); ctx.moveTo(i - 10, 215); ctx.lineTo(i + 50, 155); ctx.lineTo(i + 110, 215); ctx.fill(); ctx.fillStyle = '#8d6e63'; }
-                ctx.fillStyle = '#588157'; ctx.fillRect(0, 345, 720, 60); break;
-            case 2:
-                let hGrad = ctx.createLinearGradient(0, 0, 0, 405); hGrad.addColorStop(0, '#2a9d8f'); hGrad.addColorStop(1, '#264653'); ctx.fillStyle = hGrad; ctx.fillRect(0, 0, 720, 405);
+            case 1: let vGrad = ctx.createLinearGradient(0, 0, 0, 405); vGrad.addColorStop(0, '#ffd166'); vGrad.addColorStop(1, '#ffb703'); ctx.fillStyle = vGrad; ctx.fillRect(0, 0, 720, 405);
+                ctx.fillStyle = '#8d6e63'; for (let i = -bgScroll; i < 720 + 200; i += 280) { ctx.fillRect(i, 215, 100, 130); ctx.fillStyle = '#d4a373'; ctx.beginPath(); ctx.moveTo(i - 10, 215); ctx.lineTo(i + 50, 155); ctx.lineTo(i + 110, 215); ctx.fill(); ctx.fillStyle = '#8d6e63'; } ctx.fillStyle = '#588157'; ctx.fillRect(0, 345, 720, 60); break;
+            case 2: let hGrad = ctx.createLinearGradient(0, 0, 0, 405); hGrad.addColorStop(0, '#2a9d8f'); hGrad.addColorStop(1, '#264653'); ctx.fillStyle = hGrad; ctx.fillRect(0, 0, 720, 405);
                 ctx.fillStyle = '#1d3557'; ctx.fillRect(0, 280, 720, 65); ctx.fillStyle = '#e76f51'; ctx.fillRect(0, 345, 720, 60); break;
-            case 3:
-                let yGrad = ctx.createLinearGradient(0, 0, 0, 405); yGrad.addColorStop(0, '#3a0ca3'); yGrad.addColorStop(1, '#7209b7'); ctx.fillStyle = yGrad; ctx.fillRect(0, 0, 720, 405);
-                ctx.fillStyle = '#240046'; ctx.fillRect(0, 345, 720, 60); break;
-            case 4:
-                let cGrad = ctx.createLinearGradient(0, 0, 0, 405); cGrad.addColorStop(0, '#ddb892'); cGrad.addColorStop(1, '#b08968'); ctx.fillStyle = cGrad; ctx.fillRect(0, 0, 720, 405);
-                ctx.fillStyle = '#9c6644'; ctx.fillRect(0, 345, 720, 60); break;
-            case 5:
-                let mGrad = ctx.createLinearGradient(0, 0, 0, 405); mGrad.addColorStop(0, '#03071e'); mGrad.addColorStop(1, '#370617'); ctx.fillStyle = mGrad; ctx.fillRect(0, 0, 720, 405);
-                ctx.fillStyle = '#6a040f'; ctx.fillRect(0, 345, 720, 60); break;
-            case 6:
-                let tGrad = ctx.createLinearGradient(0, 0, 0, 405); tGrad.addColorStop(0, '#212529'); tGrad.addColorStop(1, '#495057'); ctx.fillStyle = tGrad; ctx.fillRect(0, 0, 720, 405);
-                ctx.fillStyle = '#343a40'; ctx.fillRect(0, 345, 720, 60); break;
-            case 7:
-                let clGrad = ctx.createLinearGradient(0, 0, 0, 405); clGrad.addColorStop(0, '#cdb4db'); clGrad.addColorStop(1, '#ffc6ff'); ctx.fillStyle = clGrad; ctx.fillRect(0, 0, 720, 405);
-                ctx.fillStyle = '#b8c0ff'; ctx.fillRect(0, 345, 720, 60); break;
-            case 8:
-                let dGrad = ctx.createLinearGradient(0, 0, 0, 405); dGrad.addColorStop(0, '#000000'); dGrad.addColorStop(1, '#3c096c'); ctx.fillStyle = dGrad; ctx.fillRect(0, 0, 720, 405);
-                ctx.fillStyle = '#10002b'; ctx.fillRect(0, 345, 720, 60); break;
+            case 3: let yGrad = ctx.createLinearGradient(0, 0, 0, 405); yGrad.addColorStop(0, '#3a0ca3'); yGrad.addColorStop(1, '#7209b7'); ctx.fillStyle = yGrad; ctx.fillRect(0, 0, 720, 405); ctx.fillStyle = '#240046'; ctx.fillRect(0, 345, 720, 60); break;
+            case 4: let cGrad = ctx.createLinearGradient(0, 0, 0, 405); cGrad.addColorStop(0, '#ddb892'); cGrad.addColorStop(1, '#b08968'); ctx.fillStyle = cGrad; ctx.fillRect(0, 0, 720, 405); ctx.fillStyle = '#9c6644'; ctx.fillRect(0, 345, 720, 60); break;
+            case 5: let mGrad = ctx.createLinearGradient(0, 0, 0, 405); mGrad.addColorStop(0, '#03071e'); mGrad.addColorStop(1, '#370617'); ctx.fillStyle = mGrad; ctx.fillRect(0, 0, 720, 405); ctx.fillStyle = '#6a040f'; ctx.fillRect(0, 345, 720, 60); break;
+            case 6: let tGrad = ctx.createLinearGradient(0, 0, 0, 405); tGrad.addColorStop(0, '#212529'); tGrad.addColorStop(1, '#495057'); ctx.fillStyle = tGrad; ctx.fillRect(0, 0, 720, 405); ctx.fillStyle = '#343a40'; ctx.fillRect(0, 345, 720, 60); break;
+            case 7: let clGrad = ctx.createLinearGradient(0, 0, 0, 405); clGrad.addColorStop(0, '#cdb4db'); clGrad.addColorStop(1, '#ffc6ff'); ctx.fillStyle = clGrad; ctx.fillRect(0, 0, 720, 405); ctx.fillStyle = '#b8c0ff'; ctx.fillRect(0, 345, 720, 60); break;
+            case 8: let dGrad = ctx.createLinearGradient(0, 0, 0, 405); dGrad.addColorStop(0, '#000000'); dGrad.addColorStop(1, '#3c096c'); ctx.fillStyle = dGrad; ctx.fillRect(0, 0, 720, 405); ctx.fillStyle = '#10002b'; ctx.fillRect(0, 345, 720, 60); break;
         }
         ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; let startTick = -(offset % 100); for (let i = startTick; i < 720; i += 100) ctx.fillRect(i, 360, 30, 6);
     }
@@ -910,29 +984,19 @@
             if (fx.type === 'sonic_shockwave_v2') {
                 let fxScreenX = fx.x - worldOffset; ctx.save();
                 fx.rings.forEach((scaleRatio, idx) => {
-                    let currentR = fx.radius * scaleRatio;
-                    ctx.beginPath(); ctx.arc(fxScreenX, fx.y, currentR, 0, Math.PI * 2);
+                    let currentR = fx.radius * scaleRatio; ctx.beginPath(); ctx.arc(fxScreenX, fx.y, currentR, 0, Math.PI * 2);
                     ctx.strokeStyle = idx === 0 ? `rgba(0, 240, 255, ${fx.alpha})` : (idx === 1 ? `rgba(139, 92, 246, ${fx.alpha * 0.9})` : `rgba(255, 209, 102, ${fx.alpha * 0.7})`);
                     ctx.lineWidth = 4 - idx; ctx.shadowColor = '#00f0ff'; ctx.shadowBlur = 12; ctx.stroke();
-                });
-                ctx.restore();
+                }); ctx.restore();
             } else if (fx.type === 'ground_slam') {
-                let fxScreenX = fx.x - worldOffset;
-                ctx.save(); ctx.fillStyle = 'rgba(255, 77, 109, 0.7)'; ctx.shadowColor = '#ff4d6d'; ctx.shadowBlur = 15;
-                ctx.beginPath(); ctx.ellipse(fxScreenX, fx.y, 45 * (1 - fx.timer/fx.maxTimer), 12, 0, 0, Math.PI * 2); ctx.fill();
-                ctx.restore();
+                let fxScreenX = fx.x - worldOffset; ctx.save(); ctx.fillStyle = 'rgba(255, 77, 109, 0.7)'; ctx.shadowColor = '#ff4d6d'; ctx.shadowBlur = 15;
+                ctx.beginPath(); ctx.ellipse(fxScreenX, fx.y, 45 * (1 - fx.timer/fx.maxTimer), 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
             } else if (fx.type === 'summon_glow') {
-                let fxScreenX = fx.x - worldOffset;
-                ctx.save(); ctx.strokeStyle = `rgba(255, 183, 3, ${fx.alpha})`; ctx.lineWidth = 3;
-                ctx.beginPath(); ctx.arc(fxScreenX, fx.y, fx.radius + (fx.maxTimer - fx.timer)*2, 0, Math.PI*2); ctx.stroke();
-                ctx.restore();
+                let fxScreenX = fx.x - worldOffset; ctx.save(); ctx.strokeStyle = `rgba(255, 183, 3, ${fx.alpha})`; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(fxScreenX, fx.y, fx.radius + (fx.maxTimer - fx.timer)*2, 0, Math.PI*2); ctx.stroke(); ctx.restore();
             } else if (fx.type === 'paw_tempest_v2') {
-                ctx.save();
-                ctx.translate(360, 202.5); ctx.rotate(fx.rotation);
-                ctx.fillStyle = `rgba(255, 209, 102, ${fx.timer/fx.maxTimer})`;
-                ctx.shadowColor = '#ffd166'; ctx.shadowBlur = 25;
-                ctx.beginPath(); ctx.arc(0, 0, 280 * (1 - fx.timer/fx.maxTimer), 0, Math.PI*2); ctx.fill();
-                ctx.restore();
+                ctx.save(); ctx.translate(360, 202.5); ctx.rotate(fx.rotation); ctx.fillStyle = `rgba(255, 209, 102, ${fx.timer/fx.maxTimer})`;
+                ctx.shadowColor = '#ffd166'; ctx.shadowBlur = 25; ctx.beginPath(); ctx.arc(0, 0, 280 * (1 - fx.timer/fx.maxTimer), 0, Math.PI*2); ctx.fill(); ctx.restore();
             }
         });
 
@@ -968,10 +1032,8 @@
         projectiles.forEach(proj => {
             let screenX = proj.x - worldOffset; ctx.save();
             if (proj.type === 'yarn_shuriken') {
-                ctx.translate(screenX, proj.y); ctx.rotate(proj.rotation);
-                ctx.fillStyle = '#ec4899'; ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 10;
-                ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fill();
-                ctx.strokeStyle = '#fbcfe8'; ctx.lineWidth = 2;
+                ctx.translate(screenX, proj.y); ctx.rotate(proj.rotation); ctx.fillStyle = '#ec4899'; ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 10;
+                ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#fbcfe8'; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.moveTo(-10, -10); ctx.lineTo(10, 10); ctx.moveTo(-10, 10); ctx.lineTo(10, -10); ctx.stroke();
             } else {
                 ctx.translate(screenX, proj.y); ctx.fillStyle = '#ffd166'; ctx.shadowColor = '#ffd166'; ctx.shadowBlur = 8;
@@ -984,8 +1046,7 @@
 
         if (bossFightActive && boss) {
             let bossScreenX = boss.x - worldOffset; drawThemeBoss(bossScreenX, boss.y, currentStage, boss.phase);
-            ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(360 - 160, 16, 320, 18);
-            ctx.fillStyle = '#ff4d6d'; ctx.fillRect(360 - 158, 18, 316 * (boss.hp / boss.maxHp), 14);
+            ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(360 - 160, 16, 320, 18); ctx.fillStyle = '#ff4d6d'; ctx.fillRect(360 - 158, 18, 316 * (boss.hp / boss.maxHp), 14);
             ctx.fillStyle = '#ffffff'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`👑 STAGE ${currentStage} BOSS - PHASE ${boss.phase}`, 360, 30);
         }
 
