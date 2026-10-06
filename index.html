@@ -41,17 +41,15 @@
         .paw-icon { width: 14px; height: 14px; object-fit: contain; filter: drop-shadow(0 0 4px #ff65a3); transition: filter 0.3s, opacity 0.3s; }
         .paw-icon.lost { opacity: 0.2; filter: grayscale(100%); }
         .bar-bg { width: 100%; background: #181329; border: 1px solid #5b4382; border-radius: 6px; position: relative; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.9); }
-        .hp-bar-bg { height: 13px; }
+        .hp-bar-bg { height: 16px; }
         .mp-bar-bg { height: 8px; }
         .rage-bar-bg { height: 8px; }
-        .poise-bar-bg { height: 5px; margin-top: 2px; border-color: #38bdf8; }
         .bar-fill { height: 100%; position: absolute; top: 0; left: 0; transition: width 0.15s ease-out; }
         #hp-ghost { background: #881337; z-index: 1; transition: width 0.4s ease-out 0.2s; }
         #hp-fill { background: linear-gradient(90deg, #e11d48, #fb7185); z-index: 2; }
         #mp-fill { background: linear-gradient(90deg, #0284c7, #38bdf8); z-index: 2; }
         #rage-fill { background: linear-gradient(90deg, #a855f7, #e879f9); z-index: 2; box-shadow: 0 0 8px #a855f7; }
-        #boss-poise-fill { background: #38bdf8; z-index: 2; box-shadow: 0 0 6px #38bdf8; }
-        .bar-text { position: absolute; width: 100%; text-align: center; font-size: 9px; font-weight: bold; color: white; line-height: 13px; z-index: 3; text-shadow: 1px 1px 2px black; }
+        .bar-text { position: absolute; width: 100%; text-align: center; font-size: 10px; font-weight: 900; color: white; line-height: 16px; z-index: 3; text-shadow: 1px 1px 3px black; letter-spacing: 0.5px; }
 
         .center-hud { display: flex; flex-direction: column; align-items: center; gap: 6px; }
         .objective-ribbon { background: rgba(15,12,27,0.92); border: 1.5px solid #ffd166; color: #ffd166; padding: 4px 16px; border-radius: 12px; font-size: 11px; font-weight: bold; letter-spacing: 1px; box-shadow: 0 4px 12px rgba(0,0,0,0.6); }
@@ -61,9 +59,18 @@
         #stage-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #34d399, #38bdf8); border-radius: 4px; transition: width 0.1s linear; }
         .stage-cat-marker { position: absolute; top: -6px; left: 0%; font-size: 14px; transform: translateX(-50%); transition: left 0.1s linear; filter: drop-shadow(0 0 4px #34d399); }
 
-        #boss-hud { display: none; width: 340px; flex-direction: column; align-items: center; background: rgba(15,12,27,0.92); border: 2px solid #f43f5e; padding: 8px 12px; border-radius: 10px; box-shadow: 0 0 18px rgba(244,63,94,0.4); transition: border-color 0.3s, box-shadow 0.3s; }
-        #boss-hud.enraged { border-color: #dc2626; box-shadow: 0 0 25px rgba(220, 38, 38, 0.8); }
-        
+        /* --- REDESIGNED BOSS HUD (NO MP BAR, CLEARER HP) --- */
+        #boss-hud { display: none; width: 380px; flex-direction: column; align-items: center; background: rgba(15,12,27,0.95); border: 2px solid #f43f5e; padding: 8px 14px; border-radius: 12px; box-shadow: 0 0 20px rgba(244,63,94,0.5); transition: all 0.3s; }
+        #boss-hud.enraged { border-color: #dc2626; box-shadow: 0 0 28px rgba(220, 38, 38, 0.9); }
+        #boss-hp-ghost { background: #ffd166; z-index: 1; transition: width 0.4s ease-out 0.1s; }
+        #boss-hp-fill { background: linear-gradient(90deg, #e11d48, #ff4d6d); z-index: 2; transition: width 0.15s ease-out; }
+        .boss-hp-bg { height: 20px; border-radius: 8px; margin-top: 5px; border: 1.5px solid #ff4d6d; }
+        .boss-low-hp #boss-hp-fill { animation: bossLowHpPulse 0.6s infinite alternate; }
+        @keyframes bossLowHpPulse {
+            from { background: #e11d48; box-shadow: 0 0 5px #e11d48; }
+            to { background: #ff003c; box-shadow: 0 0 18px #ff003c; }
+        }
+
         #combo-ui { position: absolute; right: 35px; top: 35%; display: flex; flex-direction: column; align-items: flex-end; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
         .combo-text { font-size: 44px; font-style: italic; font-weight: 900; color: #ffd166; text-shadow: 0 0 12px rgba(255,209,102,0.7), 2px 2px 0 #000; line-height: 1; }
         .combo-decay { width: 100%; height: 4px; background: #ffd166; margin-top: 4px; box-shadow: 0 0 6px #ffd166; }
@@ -151,6 +158,7 @@
             .status-panel { padding: 8px; gap: 8px; }
             .portrait { width: 40px; height: 40px; }
             .bars-container { width: 140px; }
+            #boss-hud { width: 280px; padding: 6px 10px; }
             .shop-grid { grid-template-columns: 1fr; max-height: 180px; }
             .stage-progress-wrapper { width: 180px; }
             #skill-slots { margin-bottom: 15px; margin-left: 10px; gap: 4px; }
@@ -179,7 +187,10 @@
                         <div id="hp-fill" class="bar-fill"></div>
                         <div class="bar-text" id="hp-txt">100/100</div>
                     </div>
-                    <div class="bar-bg mp-bar-bg"><div id="mp-fill" class="bar-fill"></div></div>
+                    <div class="bar-bg mp-bar-bg">
+                        <div id="mp-fill" class="bar-fill"></div>
+                        <div class="bar-text" id="mp-txt" style="line-height:8px; font-size:7px;">50/50</div>
+                    </div>
                     <div class="bar-bg rage-bar-bg"><div id="rage-fill" class="bar-fill"></div></div>
                 </div>
             </div>
@@ -192,10 +203,18 @@
                         <div class="stage-cat-marker" id="stage-cat-marker">🐱</div>
                     </div>
                 </div>
+                
+                <!-- REDESIGNED BOSS HUD (NO MP BAR, IMPROVED HP DISPLAY) -->
                 <div id="boss-hud">
-                    <div style="color:#f43f5e; font-size:13px; font-weight:900; letter-spacing:1px;">👑 <span id="boss-name">BOSS</span></div>
-                    <div class="bar-bg hp-bar-bg" style="margin-top:4px;"><div id="boss-hp-fill" class="bar-fill" style="background:#f43f5e; width:100%;"></div></div>
-                    <div class="bar-bg poise-bar-bg"><div id="boss-poise-fill" class="bar-fill" style="width:100%;"></div></div>
+                    <div style="color:#f43f5e; font-size:13px; font-weight:900; letter-spacing:1px; display:flex; justify-content:space-between; width:100%;">
+                        <span>👑 <span id="boss-name">BOSS</span></span>
+                        <span id="boss-hp-pct" style="color:#ffd166;">100%</span>
+                    </div>
+                    <div class="bar-bg boss-hp-bg">
+                        <div id="boss-hp-ghost" class="bar-fill" style="width:100%;"></div>
+                        <div id="boss-hp-fill" class="bar-fill" style="width:100%;"></div>
+                        <div class="bar-text" id="boss-hp-txt" style="line-height:20px; font-size:11px;">1000/1000</div>
+                    </div>
                 </div>
             </div>
             
@@ -413,7 +432,9 @@
 
     const LOGICAL_WIDTH = 960, LOGICAL_HEIGHT = 540;
     const SPRITE_SCALE = 1.5;
-    const FLOOR_Y = 450;
+    
+    // ตั้งค่าระดับพื้นตรงตำแหน่ง 80% จากขอบบน
+    const FLOOR_Y = Math.round(LOGICAL_HEIGHT * 0.80); // 432px
 
     function resize() {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1092,8 +1113,13 @@
     let playerPW = Math.round(70 * SPRITE_SCALE);
     let playerPH = Math.round(70 * SPRITE_SCALE);
 
+    // สูตรคำนวณ Max MP ปรับขึ้นตาม Level: Max MP = 50 + (level - 1) * 15
+    function calculateMaxMp(level) {
+        return 50 + (Math.max(1, level) - 1) * 15;
+    }
+
     let player = { x: 200, y: FLOOR_Y - playerPH, w: playerPW, h: playerPH, vx: 0, vy: 0, speed: 8.5, jump: -12, grav: 0.6, grounded: true,
-                   hp: 100, maxHp: 100, mp: 40, maxMp: 50, rage: 0, maxRage: 100, lives: 5,
+                   hp: 100, maxHp: 100, mp: 50, maxMp: 50, rage: 0, maxRage: 100, lives: 5,
                    atk: 15, coins: 0, level: 1, exp: 0, invincibilityTimer: 0,
                    dashCooldown: 0, isDashing: false, hitFlash: 0, facing: 1,
                    comboStep: 1, comboStepTimer: 0, parryTimer: 0,
@@ -1318,6 +1344,22 @@
         loots.push({ x: x, y: y, w: 28, h: 28, vy: -4, type: type, grounded: false });
     }
 
+    function checkLevelUp() {
+        let expNeeded = player.level * 100;
+        if (player.exp >= expNeeded) {
+            player.exp -= expNeeded;
+            player.level++;
+            player.maxHp += 15;
+            player.hp = player.maxHp;
+            player.maxMp = calculateMaxMp(player.level);
+            player.mp = player.maxMp;
+            player.atk += 3;
+            popups.push(getPooledPopup(player, '🌟 LEVEL UP!', '#ffd166', -50));
+            playSfx('rage-ready');
+            updateHUD();
+        }
+    }
+
     function executeDash() {
         if (player.dashCooldown > 0) return;
         playSfx('dash');
@@ -1415,6 +1457,7 @@
                 player.w = Math.round(70 * SPRITE_SCALE);
                 player.h = Math.round(70 * SPRITE_SCALE);
                 player.speed = 8.5; 
+                player.maxMp = calculateMaxMp(player.level || 1);
                 player.hp = player.maxHp; player.mp = player.maxMp; player.rage = 0;
                 if(!player.unlockedSkins) player.unlockedSkins = { 'golden-shogun': false, 'shadow-shinobi': false };
             } catch(e) {
@@ -1452,8 +1495,9 @@
 
             let pw = Math.round(70 * SPRITE_SCALE);
             let ph = Math.round(70 * SPRITE_SCALE);
+            let startMaxMp = calculateMaxMp(1);
 
-            player = { x: 200, y: FLOOR_Y - ph, w: pw, h: ph, vx: 0, vy: 0, speed: 8.5, jump: -12, grav: 0.6, grounded: true, hp: startingHp, maxHp: startingHp, mp: 40, maxMp: 50, rage: 0, maxRage: 100, coins: 0, lives: startingLives, atk: 15, level: 1, exp: 0, invincibilityTimer: 0, dashCooldown: 0, isDashing: false, hitFlash: 0, facing: 1, comboStep: 1, comboStepTimer: 0, parryTimer: 0, coyoteTimer: 0, jumpBufferTimer: 0, helperActiveTimer: 0, helperX: undefined, helperY: undefined, helperFacing: 1, unlockedSkills: { shuriken: false, shockwave: false, tempest: false, helper: false }, equippedSkills: { C: null, V: null, B: null }, unlockedSkins: { 'golden-shogun': false, 'shadow-shinobi': false }, equippedSkin: null };
+            player = { x: 200, y: FLOOR_Y - ph, w: pw, h: ph, vx: 0, vy: 0, speed: 8.5, jump: -12, grav: 0.6, grounded: true, hp: startingHp, maxHp: startingHp, mp: startMaxMp, maxMp: startMaxMp, rage: 0, maxRage: 100, coins: 0, lives: startingLives, atk: 15, level: 1, exp: 0, invincibilityTimer: 0, dashCooldown: 0, isDashing: false, hitFlash: 0, facing: 1, comboStep: 1, comboStepTimer: 0, parryTimer: 0, coyoteTimer: 0, jumpBufferTimer: 0, helperActiveTimer: 0, helperX: undefined, helperY: undefined, helperFacing: 1, unlockedSkills: { shuriken: false, shockwave: false, tempest: false, helper: false }, equippedSkills: { C: null, V: null, B: null }, unlockedSkins: { 'golden-shogun': false, 'shadow-shinobi': false }, equippedSkin: null };
             currentStage = 1; bestStage = 1; bestTimes = {}; endlessHighScore = 1; bossRushBestTime = null;
             document.getElementById('game-over-modal').classList.add('hidden');
             document.getElementById('stage-clear-modal').classList.add('hidden');
@@ -1475,7 +1519,8 @@
             endlessWave = 1;
             let pw = Math.round(70 * SPRITE_SCALE);
             let ph = Math.round(70 * SPRITE_SCALE);
-            player = { x: 200, y: FLOOR_Y - ph, w: pw, h: ph, vx: 0, vy: 0, speed: 8.5, jump: -12, grav: 0.6, grounded: true, hp: 100, maxHp: 100, mp: 40, maxMp: 50, rage: 0, maxRage: 100, coins: 0, lives: 5, atk: 20, level: 1, exp: 0, invincibilityTimer: 0, dashCooldown: 0, isDashing: false, hitFlash: 0, facing: 1, comboStep: 1, comboStepTimer: 0, parryTimer: 0, coyoteTimer: 0, jumpBufferTimer: 0, helperActiveTimer: 0, helperX: undefined, helperY: undefined, helperFacing: 1, unlockedSkills: { shuriken: true, shockwave: true, tempest: true, helper: true }, equippedSkills: { C: 'shuriken', V: 'shockwave', B: 'tempest' }, unlockedSkins: { 'golden-shogun': true, 'shadow-shinobi': true }, equippedSkin: 'golden-shogun' };
+            let startMaxMp = calculateMaxMp(1);
+            player = { x: 200, y: FLOOR_Y - ph, w: pw, h: ph, vx: 0, vy: 0, speed: 8.5, jump: -12, grav: 0.6, grounded: true, hp: 100, maxHp: 100, mp: startMaxMp, maxMp: startMaxMp, rage: 0, maxRage: 100, coins: 0, lives: 5, atk: 20, level: 1, exp: 0, invincibilityTimer: 0, dashCooldown: 0, isDashing: false, hitFlash: 0, facing: 1, comboStep: 1, comboStepTimer: 0, parryTimer: 0, coyoteTimer: 0, jumpBufferTimer: 0, helperActiveTimer: 0, helperX: undefined, helperY: undefined, helperFacing: 1, unlockedSkills: { shuriken: true, shockwave: true, tempest: true, helper: true }, equippedSkills: { C: 'shuriken', V: 'shockwave', B: 'tempest' }, unlockedSkins: { 'golden-shogun': true, 'shadow-shinobi': true }, equippedSkin: 'golden-shogun' };
             currentStage = 1;
             document.getElementById('main-menu').classList.add('hidden');
             document.getElementById('game-modes-modal').classList.add('hidden');
@@ -1495,7 +1540,8 @@
             bossRushStartTime = performance.now();
             let pw = Math.round(70 * SPRITE_SCALE);
             let ph = Math.round(70 * SPRITE_SCALE);
-            player = { x: 200, y: FLOOR_Y - ph, w: pw, h: ph, vx: 0, vy: 0, speed: 8.5, jump: -12, grav: 0.6, grounded: true, hp: 120, maxHp: 120, mp: 50, maxMp: 50, rage: 0, maxRage: 100, coins: 0, lives: 5, atk: 22, level: 3, exp: 0, invincibilityTimer: 0, dashCooldown: 0, isDashing: false, hitFlash: 0, facing: 1, comboStep: 1, comboStepTimer: 0, parryTimer: 0, coyoteTimer: 0, jumpBufferTimer: 0, helperActiveTimer: 0, helperX: undefined, helperY: undefined, helperFacing: 1, unlockedSkills: { shuriken: true, shockwave: true, tempest: true, helper: true }, equippedSkills: { C: 'shuriken', V: 'shockwave', B: 'tempest' }, unlockedSkins: { 'golden-shogun': true, 'shadow-shinobi': true }, equippedSkin: 'golden-shogun' };
+            let startMaxMp = calculateMaxMp(3);
+            player = { x: 200, y: FLOOR_Y - ph, w: pw, h: ph, vx: 0, vy: 0, speed: 8.5, jump: -12, grav: 0.6, grounded: true, hp: 120, maxHp: 120, mp: startMaxMp, maxMp: startMaxMp, rage: 0, maxRage: 100, coins: 0, lives: 5, atk: 22, level: 3, exp: 0, invincibilityTimer: 0, dashCooldown: 0, isDashing: false, hitFlash: 0, facing: 1, comboStep: 1, comboStepTimer: 0, parryTimer: 0, coyoteTimer: 0, jumpBufferTimer: 0, helperActiveTimer: 0, helperX: undefined, helperY: undefined, helperFacing: 1, unlockedSkills: { shuriken: true, shockwave: true, tempest: true, helper: true }, equippedSkills: { C: 'shuriken', V: 'shockwave', B: 'tempest' }, unlockedSkins: { 'golden-shogun': true, 'shadow-shinobi': true }, equippedSkin: 'golden-shogun' };
             currentStage = 1;
             document.getElementById('main-menu').classList.add('hidden');
             document.getElementById('game-modes-modal').classList.add('hidden');
@@ -1575,6 +1621,7 @@
             maxPoise: bossCfg.poise || 120, 
             poiseBreakTimer: 0, 
             attackTimer: 110, 
+            superArmorTimer: 0,
             vx: 0, 
             vy: 0,
             speed: 2.2, 
@@ -1622,14 +1669,37 @@
     }
 
     function updateHUD() {
+        player.maxMp = calculateMaxMp(player.level || 1);
         document.getElementById('hp-fill').style.width = `${(player.hp/player.maxHp)*100}%`;
         document.getElementById('hp-ghost').style.width = `${(player.hp/player.maxHp)*100}%`;
         document.getElementById('hp-txt').innerText = `${player.hp}/${player.maxHp}`;
         document.getElementById('mp-fill').style.width = `${(player.mp/player.maxMp)*100}%`;
+        if(document.getElementById('mp-txt')) document.getElementById('mp-txt').innerText = `${player.mp}/${player.maxMp}`;
         document.getElementById('rage-fill').style.width = `${(player.rage/player.maxRage)*100}%`;
+        
+        /* IMPROVED CLEAR BOSS HP DISPLAY */
         if(boss) {
-            document.getElementById('boss-poise-fill').style.width = `${(Math.max(0, boss.poise)/boss.maxPoise)*100}%`;
+            let bossHpPct = Math.max(0, Math.min(100, Math.floor((boss.hp / boss.maxHp) * 100)));
+            let bossHpFill = document.getElementById('boss-hp-fill');
+            let bossHpGhost = document.getElementById('boss-hp-ghost');
+            let bossHpTxt = document.getElementById('boss-hp-txt');
+            let bossHpPctTxt = document.getElementById('boss-hp-pct');
+            let bossHudBox = document.getElementById('boss-hud');
+
+            if (bossHpFill) bossHpFill.style.width = `${bossHpPct}%`;
+            if (bossHpGhost) bossHpGhost.style.width = `${bossHpPct}%`;
+            if (bossHpTxt) bossHpTxt.innerText = `${Math.max(0, boss.hp)} / ${boss.maxHp}`;
+            if (bossHpPctTxt) bossHpPctTxt.innerText = `${bossHpPct}%`;
+
+            if (bossHudBox) {
+                if (bossHpPct <= 25) {
+                    bossHudBox.classList.add('boss-low-hp');
+                } else {
+                    bossHudBox.classList.remove('boss-low-hp');
+                }
+            }
         }
+
         document.getElementById('hud-coins').innerText = player.coins;
         document.getElementById('hud-lv').innerText = `LV.${player.level}`;
 
@@ -1739,6 +1809,7 @@
                 playerStats.totalKills++;
                 spawnLoot(en.x, en.y);
                 player.exp += 20;
+                checkLevelUp();
                 updateHUD();
             }
         }
@@ -1791,15 +1862,21 @@
 
         if (bossInRange && !targetEnemy) {
             let appliedDmg = boss.armorBreakTimer > 0 ? Math.floor(finalDmg * 1.2) : finalDmg;
-            boss.hp -= appliedDmg; hitStop = 6; 
+            boss.hp -= appliedDmg; 
             
-            if (gameSettings.screenShakeEnabled) screenShake = isCrit ? 10 : 6; 
-            boss.vx = player.facing * 3;
-            boss.poise -= 10;
+            // Hitstop Limit Guard
+            hitStop = 2; 
+            if (boss.superArmorTimer <= 0) {
+                boss.vx = player.facing * 1.2;
+                boss.superArmorTimer = 18; 
+            }
+
+            if (gameSettings.screenShakeEnabled) screenShake = isCrit ? 6 : 3; 
+            boss.poise -= 8;
             if (boss.poise <= 0) {
                 boss.poise = boss.maxPoise;
                 boss.poiseBreakTimer = 110;
-                hitStop = 20; 
+                hitStop = 18; 
                 if (gameSettings.screenShakeEnabled) screenShake = 14;
                 popups.push(getPooledPopup(boss, '💥 BREAK!', '#38bdf8', -30));
             }
@@ -1849,7 +1926,9 @@
                 player.coins += 4; stageCoinsEarned += 4; 
                 playerStats.totalCoinsEarned += 4; playerStats.totalKills++;
                 spawnLoot(targetEnemy.x, targetEnemy.y);
-                player.exp += 20; updateHUD(); 
+                player.exp += 20; 
+                checkLevelUp();
+                updateHUD(); 
             }
         }
 
@@ -1908,18 +1987,23 @@
                 player.coins += 6; stageCoinsEarned += 6; 
                 playerStats.totalCoinsEarned += 6; playerStats.totalKills++;
                 spawnLoot(targetEnemy.x, targetEnemy.y);
-                player.exp += 25; updateHUD(); 
+                player.exp += 25; 
+                checkLevelUp();
+                updateHUD(); 
             }
         }
 
         if(boss && (gameState === 'BOSS' || isBossRushMode) && boss.phaseTransitionTimer <= 0 && Math.abs((boss.x + boss.w/2) - attackCenterX) < (240 * SPRITE_SCALE)) {
-            boss.hp -= dmg; hitStop = 14; 
-            boss.vx = player.facing * 3;
+            boss.hp -= dmg; hitStop = 6; 
+            if (boss.superArmorTimer <= 0) {
+                boss.vx = player.facing * 2;
+                boss.superArmorTimer = 20;
+            }
             boss.poise -= 40;
             if (boss.poise <= 0) {
                 boss.poise = boss.maxPoise;
                 boss.poiseBreakTimer = 110;
-                hitStop = 25; 
+                hitStop = 20; 
                 if (gameSettings.screenShakeEnabled) screenShake = 18;
                 popups.push(getPooledPopup(boss, '💥 BREAK!', '#38bdf8', -30));
             }
@@ -1989,13 +2073,13 @@
             }
         });
         if(boss && (gameState === 'BOSS' || isBossRushMode) && boss.phaseTransitionTimer <= 0) {
-            boss.hp -= dmg; hitStop = 14; 
+            boss.hp -= dmg; hitStop = 8; 
             boss.poise -= 50;
             boss.slowTimer = 180;
             if (boss.poise <= 0) {
                 boss.poise = boss.maxPoise;
                 boss.poiseBreakTimer = 110;
-                hitStop = 25; 
+                hitStop = 20; 
                 if (gameSettings.screenShakeEnabled) screenShake = 15;
                 popups.push(getPooledPopup(boss, '💥 BREAK!', '#38bdf8', -30));
             }
@@ -2035,13 +2119,13 @@
             player.rage = Math.min(player.maxRage, player.rage + 22);
         });
         if(boss && (gameState === 'BOSS' || isBossRushMode) && boss.phaseTransitionTimer <= 0) {
-            boss.hp -= dmg; hitStop = 18; 
+            boss.hp -= dmg; hitStop = 12; 
             boss.poise -= 75;
             boss.armorBreakTimer = 300;
             if (boss.poise <= 0) {
                 boss.poise = boss.maxPoise;
                 boss.poiseBreakTimer = 110;
-                hitStop = 30; 
+                hitStop = 25; 
                 if (gameSettings.screenShakeEnabled) screenShake = 18;
                 popups.push(getPooledPopup(boss, '💥 BREAK!', '#38bdf8', -30));
             }
@@ -2080,6 +2164,7 @@
 
         if (boss.slowTimer > 0) boss.slowTimer -= timeScale;
         if (boss.armorBreakTimer > 0) boss.armorBreakTimer -= timeScale;
+        if (boss.superArmorTimer > 0) boss.superArmorTimer -= timeScale;
 
         if (boss.phaseTransitionTimer > 0) {
             boss.phaseTransitionTimer -= timeScale;
@@ -2379,6 +2464,8 @@
                         player.coins += 5; stageCoinsEarned += 5;
                         playerStats.totalCoinsEarned += 5; playerStats.totalKills++;
                         spawnLoot(nearestVictim.x, nearestVictim.y);
+                        player.exp += 15;
+                        checkLevelUp();
                         updateHUD();
                     } else if (nearestVictim === boss && boss.hp <= 0 && bossDeathTimer === 0) {
                         bossDeathTimer = 90; playSfx('boss-kill');
@@ -2392,7 +2479,12 @@
             if (player.comboStepTimer <= 0) player.comboStep = 1;
         }
 
-        if(player.mp < player.maxMp && Math.floor(frameCount) % 30 === 0) { player.mp = Math.min(player.maxMp, player.mp + 1); updateHUD(); }
+        // อัตราการฟื้นฟู MP อัตโนมัติ ปรับให้สอดคล้องกับ Max MP
+        if(player.mp < player.maxMp && Math.floor(frameCount) % 20 === 0) { 
+            let regenAmount = Math.max(1, Math.floor(player.maxMp / 30));
+            player.mp = Math.min(player.maxMp, player.mp + regenAmount); 
+            updateHUD(); 
+        }
 
         if(combo > 0) {
             comboTimer -= timeScale;
@@ -2479,6 +2571,8 @@
                         en.dead = true; player.coins += 8; stageCoinsEarned += 8;
                         playerStats.totalCoinsEarned += 8; playerStats.totalKills++;
                         spawnLoot(en.x, en.y);
+                        player.exp += 20;
+                        checkLevelUp();
                         updateHUD();
                     }
                 }
@@ -2525,8 +2619,8 @@
                     popups.push(getPooledPopup(player, collectedByHelper ? '🐱 +20 HP' : '+20 HP', '#f43f5e', -30));
                     playSfx('heal');
                 } else if (lt.type === 'mp') {
-                    player.mp = Math.min(player.maxMp, player.mp + 20);
-                    popups.push(getPooledPopup(player, collectedByHelper ? '🐱 +20 MP' : '+20 MP', '#38bdf8', -30));
+                    player.mp = Math.min(player.maxMp, player.mp + 25);
+                    popups.push(getPooledPopup(player, collectedByHelper ? '🐱 +25 MP' : '+25 MP', '#38bdf8', -30));
                     playSfx('coin');
                 } else {
                     player.coins += 8;
@@ -2696,6 +2790,8 @@
                         player.coins += 4; stageCoinsEarned += 4; 
                         playerStats.totalCoinsEarned += 4; playerStats.totalKills++;
                         spawnLoot(en.x, en.y);
+                        player.exp += 20;
+                        checkLevelUp();
                         updateHUD(); 
                     }
                 }
@@ -3000,28 +3096,28 @@
 
         ctx.globalAlpha = alpha;
         let centerX = Math.round(targetX + player.w/2);
-        let centerY = Math.round(targetY + player.h/2);
+        let drawY = targetY;
 
         ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
         ctx.beginPath();
         ctx.ellipse(centerX, FLOOR_Y - 2, player.w * 0.35, 7, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.translate(centerX, centerY);
+        ctx.translate(centerX, Math.round(drawY + player.h));
         if (facing === -1) ctx.scale(-1, 1);
         
         let skinImg = skinKey ? images['skin-' + skinKey] : images['cat'];
         let activeImg = (skinImg && skinImg.complete && skinImg.naturalWidth > 0) ? skinImg : images['cat'];
 
         if (activeImg && activeImg.complete && activeImg.naturalWidth > 0) {
-            drawImagePreserveAspect(ctx, activeImg, -player.w/2, -player.h/2, player.w, player.h, 'center');
+            drawImagePreserveAspect(ctx, activeImg, -player.w/2, -player.h, player.w, player.h, 'bottom');
         } else {
             ctx.fillStyle = '#f43f5e';
-            ctx.fillRect(-player.w/2, -player.h/2, player.w, player.h);
+            ctx.fillRect(-player.w/2, -player.h, player.w, player.h);
             ctx.fillStyle = '#ffd166';
-            ctx.fillRect(-12, -22, 10, 10); ctx.fillRect(2, -22, 10, 10);
+            ctx.fillRect(-12, -player.h + 10, 10, 10); ctx.fillRect(2, -player.h + 10, 10, 10);
             ctx.fillStyle = '#000';
-            ctx.fillRect(-9, -19, 4, 4); ctx.fillRect(5, -19, 4, 4);
+            ctx.fillRect(-9, -player.h + 13, 4, 4); ctx.fillRect(5, -player.h + 13, 4, 4);
         }
         ctx.restore();
     }
@@ -3544,8 +3640,6 @@
         });
 
         if(boss && (gameState === 'BOSS' || isBossRushMode)) {
-            document.getElementById('boss-hp-fill').style.width = `${(boss.hp/boss.maxHp)*100}%`;
-            
             ctx.save();
             let isTelegraphing = boss.attackTimer < 35; 
 
